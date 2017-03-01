@@ -18,47 +18,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include "v8.h"
 #include "v8chakra.h"
 
 namespace v8 {
 
-using jsrt::ContextShim;
-using jsrt::IsolateShim;
+Local<Value> Symbol::Name() const {
+  jsrt::IsolateShim* iso = jsrt::IsolateShim::GetCurrent();
+  jsrt::ContextShim* contextShim = iso->GetCurrentContextShim();
 
-Local<Value> BooleanObject::New(Isolate* isolate, bool value) {
-  JsValueRef booleanObjectConstructor = IsolateShim::FromIsolate(isolate)
-                                             ->GetCurrentContextShim()
-                                             ->GetBooleanObjectConstructor();
+  JsValueRef getSymbolKeyForFunction =
+    contextShim->GetgetSymbolKeyForFunction();
+  JsValueRef symbolDescription;
 
-  JsValueRef newBooleanObjectRef;
-  if (jsrt::ConstructObject(booleanObjectConstructor,
-                            *Boolean::From(value),
-                            &newBooleanObjectRef) != JsNoError) {
+  if (jsrt::CallFunction(getSymbolKeyForFunction, (JsValueRef)this,
+                         &symbolDescription) != JsNoError) {
     return Local<Value>();
   }
 
-  return Local<BooleanObject>::New(newBooleanObjectRef);
-}
-
-Local<Value> BooleanObject::New(bool value) {
-  return New(IsolateShim::GetCurrentAsIsolate(), value);
-}
-
-bool BooleanObject::ValueOf() const {
-  bool value;
-  if (jsrt::ValueToNative</*LIKELY*/true>(JsConvertValueToBoolean,
-                                          JsBooleanToBool,
-                                          (JsValueRef)this,
-                                          &value) != JsNoError) {
-    return false;
-  }
-
-  return value;
-}
-
-BooleanObject *BooleanObject::Cast(v8::Value *obj) {
-  CHAKRA_ASSERT(obj->IsBooleanObject());
-  return static_cast<BooleanObject*>(obj);
+  return Local<Value>(symbolDescription);
 }
 
 }  // namespace v8

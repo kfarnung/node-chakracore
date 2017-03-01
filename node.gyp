@@ -334,7 +334,7 @@
             'deps/v8/src/third_party/vtune/v8vtune.gyp:v8_vtune'
           ],
         }],
-        [ 'v8_enable_inspector==1 and node_engine=="v8"', {
+        [ 'v8_enable_inspector==1', {
           'defines': [
             'HAVE_INSPECTOR=1',
           ],
@@ -353,6 +353,23 @@
             '<(SHARED_INTERMEDIATE_DIR)/include', # for inspector
             '<(SHARED_INTERMEDIATE_DIR)',
           ],
+          'conditions': [
+            [ 'node_engine=="chakracore"', {
+              'dependencies': [
+                'deps/chakrashim/inspector/src/inspector/inspector.gyp:standalone_inspector',
+              ],
+              'include_dirs': [
+                'deps/chakrashim/inspector/include',
+              ],
+            },{
+              'dependencies': [
+                'deps/v8_inspector/src/inspector/inspector.gyp:standalone_inspector',
+              ],
+              'include_dirs': [
+                'deps/v8_inspector/include',
+              ],
+            }]
+          ]
         }, {
           'defines': [ 'HAVE_INSPECTOR=0' ]
         }],
@@ -739,9 +756,6 @@
             {
               'action_name': 'v8_inspector_compress_protocol_json',
               'process_outputs_as_sources': 1,
-              'inputs': [
-                'deps/v8/src/inspector/js_protocol.json',
-              ],
               'outputs': [
                 '<(SHARED_INTERMEDIATE_DIR)/v8_inspector_protocol_json.h',
               ],
@@ -750,6 +764,17 @@
                 'tools/compress_json.py',
                 '<@(_inputs)',
                 '<@(_outputs)',
+              ],
+              'conditions': [
+                [ 'node_engine=="chakracore"', {
+                  'inputs': [
+                    'deps/chakrashim/inspector/src/inspector/js_protocol.json',
+                  ],
+                }, {
+                  'inputs': [
+                    'deps/v8/src/inspector/js_protocol.json',
+                  ],
+                }],
               ],
             },
           ],

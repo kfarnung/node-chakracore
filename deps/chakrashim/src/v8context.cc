@@ -147,4 +147,14 @@ Handle<Value> Context::GetSecurityToken() {
   return Handle<Value>();
 }
 
+void Context::Enter() {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
+}
+
+void Context::Exit() {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
+}
+
 }  // namespace v8

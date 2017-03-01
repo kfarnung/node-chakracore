@@ -818,4 +818,26 @@ Object *Object::Cast(Value *obj) {
   return static_cast<Object*>(obj);
 }
 
+Maybe<bool> Object::CreateDataProperty(Local<Context> context, Local<Name> key,
+                                       Local<Value> value) {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
+  return Nothing<bool>();
+}
+
+Maybe<bool> Object::CreateDataProperty(Local<Context> context, uint32_t index,
+                                       Local<Value> value) {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
+  return Nothing<bool>();
+}
+
+void Object::SetAccessorProperty(Local<Name> name, Local<Function> getter,
+                                 Local<Function> setter,
+                                 PropertyAttribute attribute,
+                                 AccessControl settings) {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
+}
+
 }  // namespace v8

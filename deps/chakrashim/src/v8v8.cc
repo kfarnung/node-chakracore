@@ -209,6 +209,14 @@ void V8::ToLocalEmpty() {
 }
 
 namespace platform {
+  v8::Platform* CreateDefaultPlatform(int thread_pool_size) {
+    return nullptr;
+  }
+
+  bool PumpMessageLoop(v8::Platform* platform, v8::Isolate* isolate) {
+    return false;
+  }
+
   void SetTracingController(
       v8::Platform* platform,
       v8::platform::tracing::TracingController* tracing_controller) {

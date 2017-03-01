@@ -314,6 +314,7 @@ class Local {
   friend class StackTrace;
   friend class String;
   friend class StringObject;
+  friend class Symbol;
   friend class Utils;
   friend class TryCatch;
   friend class UnboundScript;
@@ -328,8 +329,7 @@ class Local {
   friend V8_EXPORT Local<Boolean> True(Isolate* isolate);
   friend V8_EXPORT Local<Boolean> False(Isolate* isolate);
 
-  template <class S>
-  V8_INLINE Local(S* that)
+  explicit V8_INLINE Local(T* that)
       : val_(that) {}
   V8_INLINE static Local<T> New(Isolate* isolate, T* that) {
     return New(that);
@@ -489,6 +489,10 @@ class PersistentBase {
   V8_INLINE bool IsEmpty() const { return val_ == NULL; }
   V8_INLINE void Empty() { Reset(); }
 
+  V8_INLINE Local<T> Get(Isolate* isolate) const {
+    return Local<T>::New(isolate, *this);
+  }
+
   template <class S>
   V8_INLINE bool operator==(const PersistentBase<S>& that) const {
     return val_ == that.val_;
@@ -534,6 +538,7 @@ class PersistentBase {
  private:
   template<class F> friend class Local;
   template<class F1, class F2> friend class Persistent;
+  template <class F> friend class Global;
 
   explicit V8_INLINE PersistentBase(T* val)
       : val_(val), _weakWrapper(nullptr) {}
@@ -788,10 +793,16 @@ class ScriptOrigin {
   explicit ScriptOrigin(
     Local<Value> resource_name,
     Local<Integer> resource_line_offset = Local<Integer>(),
-    Local<Integer> resource_column_offset = Local<Integer>()) :
-      resource_name_(resource_name),
+    Local<Integer> resource_column_offset = Local<Integer>(),
+    Local<Boolean> resource_is_shared_cross_origin = Local<Boolean>(),
+    Local<Integer> script_id = Local<Integer>(),
+    Local<Boolean> resource_is_embedder_debug_script = Local<Boolean>(),
+    Local<Value> source_map_url = Local<Value>(),
+    Local<Boolean> resource_is_opaque = Local<Boolean>())
+    : resource_name_(resource_name),
       resource_line_offset_(resource_line_offset),
-      resource_column_offset_(resource_column_offset) {}
+      resource_column_offset_(resource_column_offset),
+      script_id_(script_id) {}
   Local<Value> ResourceName() const {
     return resource_name_;
   }
@@ -801,15 +812,23 @@ class ScriptOrigin {
   Local<Integer> ResourceColumnOffset() const {
     return resource_column_offset_;
   }
+  V8_INLINE Local<Integer> ScriptID() const {
+    return script_id_;
+  }
  private:
   Local<Value> resource_name_;
   Local<Integer> resource_line_offset_;
   Local<Integer> resource_column_offset_;
+  Local<Integer> script_id_;
 };
 
 class V8_EXPORT UnboundScript {
  public:
   Local<Script> BindToCurrentContext();
+
+  int GetId();
+
+  static const int kNoScriptId = 0;
 };
 
 class V8_EXPORT Script {
@@ -900,11 +919,17 @@ class V8_EXPORT ScriptCompiler {
 
 class V8_EXPORT Message {
  public:
+  Local<String> Get() const;
+
   V8_DEPRECATE_SOON("Use maybe version", Local<String> GetSourceLine()) const;
   V8_WARN_UNUSED_RESULT MaybeLocal<String> GetSourceLine(
       Local<Context> context) const;
 
+  ScriptOrigin GetScriptOrigin() const;
+
   Handle<Value> GetScriptResourceName() const;
+
+  Local<StackTrace> GetStackTrace() const;
 
   V8_DEPRECATE_SOON("Use maybe version", int GetLineNumber()) const;
   V8_WARN_UNUSED_RESULT Maybe<int> GetLineNumber(Local<Context> context) const;
@@ -966,6 +991,7 @@ class V8_EXPORT Value : public Data {
   bool IsNull() const;
   bool IsTrue() const;
   bool IsFalse() const;
+  bool IsName() const;
   bool IsString() const;
   bool IsSymbol() const;
   bool IsFunction() const;
@@ -976,11 +1002,14 @@ class V8_EXPORT Value : public Data {
   bool IsInt32() const;
   bool IsUint32() const;
   bool IsDate() const;
+  bool IsArgumentsObject() const;
   bool IsBooleanObject() const;
   bool IsNumberObject() const;
   bool IsStringObject() const;
+  bool IsSymbolObject() const;
   bool IsNativeError() const;
   bool IsRegExp() const;
+  bool IsGeneratorObject() const;
   bool IsExternal() const;
   bool IsArrayBuffer() const;
   bool IsArrayBufferView() const;
@@ -1003,6 +1032,8 @@ class V8_EXPORT Value : public Data {
   bool IsSetIterator() const;
   bool IsMap() const;
   bool IsSet() const;
+  bool IsWeakMap() const;
+  bool IsWeakSet() const;
   bool IsPromise() const;
   bool IsProxy() const;
 
@@ -1233,6 +1264,15 @@ class V8_EXPORT String : public Name {
   };
 };
 
+class V8_EXPORT Symbol : public Name {
+ public:
+  // Returns the print name string of the symbol, or undefined if none.
+  Local<Value> Name() const;
+
+ private:
+  Symbol();
+};
+
 class V8_EXPORT Number : public Primitive {
  public:
   double Value() const;
@@ -1283,6 +1323,13 @@ class V8_EXPORT Object : public Value {
                     bool Set(uint32_t index, Handle<Value> value));
   V8_WARN_UNUSED_RESULT Maybe<bool> Set(Local<Context> context, uint32_t index,
                                         Local<Value> value);
+
+  V8_WARN_UNUSED_RESULT Maybe<bool> CreateDataProperty(Local<Context> context,
+                                                       Local<Name> key,
+                                                       Local<Value> value);
+  V8_WARN_UNUSED_RESULT Maybe<bool> CreateDataProperty(Local<Context> context,
+                                                       uint32_t index,
+                                                       Local<Value> value);
 
   V8_WARN_UNUSED_RESULT Maybe<bool> DefineOwnProperty(
       Local<Context> context, Local<Name> key, Local<Value> value,
@@ -1421,6 +1468,11 @@ class V8_EXPORT Object : public Value {
   V8_DEPRECATE_SOON("Use v8::Object::GetPrivate instead.",
                     Local<Value> GetHiddenValue(Handle<String> key));
 
+  void SetAccessorProperty(Local<Name> name, Local<Function> getter,
+                           Local<Function> setter = Local<Function>(),
+                           PropertyAttribute attribute = None,
+                           AccessControl settings = DEFAULT);
+
   Maybe<bool> HasPrivate(Local<Context> context, Local<Private> key);
   Maybe<bool> SetPrivate(Local<Context> context, Local<Private> key,
                          Local<Value> value);
@@ -1493,6 +1545,13 @@ class V8_EXPORT StringObject : public Object {
   static StringObject* Cast(Value* obj);
 };
 
+class V8_EXPORT SymbolObject : public Object {
+ public:
+  static Local<Value> New(Isolate* isolate, Local<Symbol> value);
+  Local<Symbol> ValueOf() const;
+  static SymbolObject* Cast(v8::Value* obj);
+};
+
 class V8_EXPORT NumberObject : public Object {
  public:
   static Local<Value> New(Isolate * isolate, double value);
@@ -1527,6 +1586,48 @@ class V8_EXPORT RegExp : public Object {
                                                       Flags flags);
   Local<String> GetSource() const;
   static RegExp *Cast(v8::Value *obj);
+};
+
+
+class V8_EXPORT Map : public Object {
+ public:
+  size_t Size() const;
+  void Clear();
+  V8_WARN_UNUSED_RESULT MaybeLocal<Value> Get(Local<Context> context,
+                                              Local<Value> key);
+  V8_WARN_UNUSED_RESULT MaybeLocal<Map> Set(Local<Context> context,
+                                            Local<Value> key,
+                                            Local<Value> value);
+  V8_WARN_UNUSED_RESULT Maybe<bool> Has(Local<Context> context,
+                                        Local<Value> key);
+  V8_WARN_UNUSED_RESULT Maybe<bool> Delete(Local<Context> context,
+                                           Local<Value> key);
+
+  Local<Array> AsArray() const;
+  static Local<Map> New(Isolate* isolate);
+  static Map* Cast(Value* obj);
+
+ private:
+  Map();
+};
+
+class V8_EXPORT Set : public Object {
+ public:
+  size_t Size() const;
+  void Clear();
+  V8_WARN_UNUSED_RESULT MaybeLocal<Set> Add(Local<Context> context,
+                                            Local<Value> key);
+  V8_WARN_UNUSED_RESULT Maybe<bool> Has(Local<Context> context,
+                                        Local<Value> key);
+  V8_WARN_UNUSED_RESULT Maybe<bool> Delete(Local<Context> context,
+                                           Local<Value> key);
+
+  Local<Array> AsArray() const;
+  static Local<Set> New(Isolate* isolate);
+  static Set* Cast(Value* obj);
+
+ private:
+  Set();
 };
 
 template<typename T>
@@ -1640,12 +1741,20 @@ class PropertyCallbackInfo {
 
 typedef void (*FunctionCallback)(const FunctionCallbackInfo<Value>& info);
 
+enum class ConstructorBehavior { kThrow, kAllow };
+
 class V8_EXPORT Function : public Object {
  public:
-  static Local<Function> New(Isolate* isolate,
-                             FunctionCallback callback,
-                             Local<Value> data = Local<Value>(),
-                             int length = 0);
+  static MaybeLocal<Function> New(Local<Context> context,
+                                  FunctionCallback callback,
+                                  Local<Value> data = Local<Value>(),
+                                  int length = 0,
+                                  ConstructorBehavior behavior = ConstructorBehavior::kAllow);
+  static V8_DEPRECATE_SOON("Use maybe version",
+                           Local<Function> New(Isolate* isolate,
+                                               FunctionCallback callback,
+                                               Local<Value> data = Local<Value>(),
+                                               int length = 0));
 
   V8_DEPRECATE_SOON("Use maybe version",
                     Local<Object> NewInstance(int argc,
@@ -1667,9 +1776,17 @@ class V8_EXPORT Function : public Object {
                                                Handle<Value> argv[]);
 
   void SetName(Handle<String> name);
-  // Handle<Value> GetName() const;
+  Local<Value> GetName() const;
+
+  Local<Value> GetInferredName() const;
+
+  int GetScriptLineNumber() const;
+  int GetScriptColumnNumber() const;
+
+  int ScriptId() const;
 
   static Function *Cast(Value *obj);
+  static const int kLineOffsetNotFound;
 };
 
 class V8_EXPORT Promise : public Object {
@@ -2123,6 +2240,18 @@ class V8_EXPORT Exception {
   static Local<Value> Error(Handle<String> message);
 };
 
+class V8_EXPORT MicrotasksScope {
+public:
+    enum Type { kRunMicrotasks, kDoNotRunMicrotasks };
+
+    MicrotasksScope(Isolate* isolate, Type type);
+    ~MicrotasksScope();
+
+    // Prevent copying.
+    MicrotasksScope(const MicrotasksScope&) = delete;
+    MicrotasksScope& operator=(const MicrotasksScope&) = delete;
+};
+
 enum GCType {
   kGCTypeScavenge = 1 << 0,
   kGCTypeMarkSweepCompact = 1 << 1,
@@ -2236,6 +2365,8 @@ typedef void* (*CreateHistogramCallback)(
   const char* name, int min, int max, size_t buckets);
 typedef void (*AddHistogramSampleCallback)(void* histogram, int sample);
 
+typedef void (*InterruptCallback)(Isolate* isolate, void* data);
+
 class V8_EXPORT Isolate {
  public:
   struct CreateParams {
@@ -2267,6 +2398,19 @@ class V8_EXPORT Isolate {
     Isolate* const isolate_;
     Scope(const Scope&);
     Scope& operator=(const Scope&);
+  };
+
+  class V8_EXPORT DisallowJavascriptExecutionScope {
+   public:
+    enum OnFailure { CRASH_ON_FAILURE, THROW_ON_FAILURE };
+
+    DisallowJavascriptExecutionScope(Isolate* isolate, OnFailure on_failure);
+    ~DisallowJavascriptExecutionScope();
+
+    DisallowJavascriptExecutionScope(const DisallowJavascriptExecutionScope&) =
+        delete;
+    DisallowJavascriptExecutionScope& operator=(
+        const DisallowJavascriptExecutionScope&) = delete;
   };
 
   enum GarbageCollectionType {
@@ -2304,6 +2448,7 @@ class V8_EXPORT Isolate {
                                              int64_t* nextEventTime);
 
   static uint32_t GetNumberOfDataSlots();
+  bool InContext();
   Local<Context> GetCurrentContext();
   void SetPromiseRejectCallback(PromiseRejectCallback callback);
   void RunMicrotasks();
@@ -2332,6 +2477,7 @@ class V8_EXPORT Isolate {
   void RemoveGCEpilogueCallback(GCCallback callback);
 
   void CancelTerminateExecution();
+  void RequestInterrupt(InterruptCallback callback, void* data);
   void TerminateExecution();
   void RequestGarbageCollectionForTesting(GarbageCollectionType type);
 
@@ -2345,6 +2491,9 @@ class V8_EXPORT Isolate {
 
   void LowMemoryNotification();
   int ContextDisposedNotification();
+  void SetCaptureStackTraceForUncaughtExceptions(
+      bool capture, int frame_limit = 10,
+      StackTrace::StackTraceOptions options = StackTrace::kOverview);
 };
 
 class V8_EXPORT JitCodeEvent {
@@ -2508,6 +2657,9 @@ class V8_EXPORT Context {
     return New(isolate, false, extensions, global_template, global_object);
   }
   static Local<Context> GetCurrent();
+
+  void Enter();
+  void Exit();
 
   Isolate* GetIsolate();
   void* GetAlignedPointerFromEmbedderData(int index);

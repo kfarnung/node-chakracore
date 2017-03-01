@@ -14,15 +14,8 @@
 
 namespace v8_inspector {
 
-struct ScriptBreakpoint;
-class JavaScriptCallFrame;
-class PromiseTracker;
-class V8Debugger;
 class V8DebuggerScript;
-class V8InspectorImpl;
 class V8InspectorSessionImpl;
-class V8Regex;
-class V8StackTraceImpl;
 
 using protocol::ErrorString;
 using protocol::Maybe;
@@ -144,78 +137,9 @@ class V8DebuggerAgentImpl : public protocol::Debugger::Backend {
   v8::Isolate* isolate() { return m_isolate; }
 
  private:
-  bool checkEnabled(ErrorString*);
-  void enable();
-
-  SkipPauseRequest shouldSkipExceptionPause(JavaScriptCallFrame* topCallFrame);
-  SkipPauseRequest shouldSkipStepPause(JavaScriptCallFrame* topCallFrame);
-
-  void schedulePauseOnNextStatementIfSteppingInto();
-
-  std::unique_ptr<protocol::Array<protocol::Debugger::CallFrame>>
-  currentCallFrames(ErrorString*);
-  std::unique_ptr<protocol::Runtime::StackTrace> currentAsyncStackTrace();
-
-  void changeJavaScriptRecursionLevel(int step);
-
-  void setPauseOnExceptionsImpl(ErrorString*, int);
-
-  std::unique_ptr<protocol::Debugger::Location> resolveBreakpoint(
-      const String16& breakpointId, const String16& scriptId,
-      const ScriptBreakpoint&, BreakpointSource);
-  void removeBreakpoint(const String16& breakpointId);
-  bool assertPaused(ErrorString*);
-  void clearBreakDetails();
-
-  bool isCurrentCallStackEmptyOrBlackboxed();
-  bool isTopPausedCallFrameBlackboxed();
-  bool isCallFrameWithUnknownScriptOrBlackboxed(JavaScriptCallFrame*);
-
-  void internalSetAsyncCallStackDepth(int);
-  void increaseCachedSkipStackGeneration();
-
-  bool setBlackboxPattern(ErrorString*, const String16& pattern);
-
-  using ScriptsMap =
-      protocol::HashMap<String16, std::unique_ptr<V8DebuggerScript>>;
-  using BreakpointIdToDebuggerBreakpointIdsMap =
-      protocol::HashMap<String16, std::vector<String16>>;
-  using DebugServerBreakpointToBreakpointIdAndSourceMap =
-      protocol::HashMap<String16, std::pair<String16, BreakpointSource>>;
-  using MuteBreakpoins = protocol::HashMap<String16, std::pair<String16, int>>;
-
-  enum DebuggerStep { NoStep = 0, StepInto, StepOver, StepOut };
-
-  V8InspectorImpl* m_inspector;
-  V8Debugger* m_debugger;
-  V8InspectorSessionImpl* m_session;
   bool m_enabled;
-  protocol::DictionaryValue* m_state;
-  protocol::Debugger::Frontend m_frontend;
   v8::Isolate* m_isolate;
-  v8::Global<v8::Context> m_pausedContext;
-  JavaScriptCallFrames m_pausedCallFrames;
-  ScriptsMap m_scripts;
-  BreakpointIdToDebuggerBreakpointIdsMap m_breakpointIdToDebuggerBreakpointIds;
-  DebugServerBreakpointToBreakpointIdAndSourceMap m_serverBreakpoints;
-  String16 m_continueToLocationBreakpointId;
-  String16 m_breakReason;
-  std::unique_ptr<protocol::DictionaryValue> m_breakAuxData;
-  DebuggerStep m_scheduledDebuggerStep;
-  bool m_skipNextDebuggerStepOut;
-  bool m_javaScriptPauseScheduled;
-  bool m_steppingFromFramework;
-  bool m_pausingOnNativeEvent;
-
-  int m_skippedStepFrameCount;
-  int m_recursionLevelForStepOut;
-  int m_recursionLevelForStepFrame;
-  bool m_skipAllPauses;
-
-  std::unique_ptr<V8Regex> m_blackboxPattern;
-  protocol::HashMap<String16, std::vector<std::pair<int, int>>>
-      m_blackboxedPositions;
-
+  
   DISALLOW_COPY_AND_ASSIGN(V8DebuggerAgentImpl);
 };
 

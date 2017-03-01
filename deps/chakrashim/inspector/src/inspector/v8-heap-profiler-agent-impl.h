@@ -54,17 +54,6 @@ class V8HeapProfilerAgentImpl : public protocol::HeapProfiler::Backend {
       std::unique_ptr<protocol::HeapProfiler::SamplingHeapProfile>*) override;
 
  private:
-  void startTrackingHeapObjectsInternal(bool trackAllocations);
-  void stopTrackingHeapObjectsInternal();
-  void requestHeapStatsUpdate();
-  static void onTimer(void*);
-
-  V8InspectorSessionImpl* m_session;
-  v8::Isolate* m_isolate;
-  protocol::HeapProfiler::Frontend m_frontend;
-  protocol::DictionaryValue* m_state;
-  bool m_hasTimer;
-
   DISALLOW_COPY_AND_ASSIGN(V8HeapProfilerAgentImpl);
 };
 

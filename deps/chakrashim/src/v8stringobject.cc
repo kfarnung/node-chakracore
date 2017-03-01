@@ -37,6 +37,40 @@ Local<Value> StringObject::New(Handle<String> value) {
   return Local<StringObject>::New(newStringObjectRef);
 }
 
+Local<String> StringObject::ValueOf() const {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
+
+  JsValueRef stringRef;
+  if (JsConvertValueToString((JsValueRef)this, &stringRef) != JsNoError) {
+    return Local<String>();
+  }
+
+    // Find out the length of the string
+  size_t stringLength = 0;
+  if (JsCopyString(stringRef, nullptr, 0, &stringLength) != JsNoError ||
+      stringLength == 0) {
+      return Local<String>();
+  }
+
+  std::vector<char> buffer(stringLength + 1);
+  if (JsCopyString(stringRef, buffer.data(), buffer.size(), nullptr) !=
+      JsNoError) {
+      return Local<String>();
+  }
+
+  // Null-terminate the buffer
+  buffer[stringLength] = '\0';
+
+  MaybeLocal<String> str = String::NewFromUtf8(
+    jsrt::IsolateShim::GetCurrentAsIsolate(),
+    buffer.data(),
+    v8::NewStringType::kNormal,
+    buffer.size());
+
+  return str.ToLocalChecked();
+}
+
 StringObject *StringObject::Cast(v8::Value *obj) {
   CHAKRA_ASSERT(obj->IsStringObject());
   return static_cast<StringObject*>(obj);

@@ -22,63 +22,28 @@
 
 namespace v8 {
 
-Local<String> Message::Get() const {
+Local<Set> Set::New(Isolate* isolate) {
   // CHAKRA-TODO: Figure out what to do here
   CHAKRA_ASSERT(false);
-  return Local<String>();
+  return Local<Set>();
 }
 
-MaybeLocal<String> Message::GetSourceLine(Local<Context> context) const {
-  // CHAKRA-TODO: Figure out how to transmit this info...?
-  return Local<String>();
-}
-
-Local<String> Message::GetSourceLine() const {
-  return FromMaybe(GetSourceLine(Local<Context>()));
-}
-
-ScriptOrigin Message::GetScriptOrigin() const {
+MaybeLocal<Set> Set::Add(Local<Context>, Local<Value>) {
   // CHAKRA-TODO: Figure out what to do here
   CHAKRA_ASSERT(false);
-  return ScriptOrigin(Local<String>());
+  return MaybeLocal<Set>();
 }
 
-Handle<Value> Message::GetScriptResourceName() const {
-  // CHAKRA-TODO: Figure out how to transmit this info...?
-  return Handle<Value>();
-}
-
-Local<StackTrace> Message::GetStackTrace() const {
+Maybe<bool> Set::Delete(Local<Context>, Local<Value>) {
   // CHAKRA-TODO: Figure out what to do here
   CHAKRA_ASSERT(false);
-  return Local<StackTrace>();
+  return Nothing<bool>();
 }
 
-Maybe<int> Message::GetLineNumber(Local<Context> context) const {
-  // CHAKRA-TODO: Figure out how to transmit this info...?
-  return Nothing<int>();
-}
-
-int Message::GetLineNumber() const {
-  return FromMaybe(GetLineNumber(Local<Context>()));
-}
-
-Maybe<int> Message::GetStartColumn(Local<Context> context) const {
-  // CHAKRA-TODO: Figure out how to transmit this info...?
-  return Nothing<int>();
-}
-
-int Message::GetStartColumn() const {
-  return FromMaybe(GetStartColumn(Local<Context>()));
-}
-
-Maybe<int> Message::GetEndColumn(Local<Context> context) const {
-  // CHAKRA-TODO: Figure out how to transmit this info...?
-  return Nothing<int>();
-}
-
-int Message::GetEndColumn() const {
-  return FromMaybe(GetEndColumn(Local<Context>()));
+Local<Array> Set::AsArray() const {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
+  return Local<Array>();
 }
 
 }  // namespace v8

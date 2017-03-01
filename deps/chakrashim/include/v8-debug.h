@@ -91,6 +91,8 @@ class V8_EXPORT Debug {
   static Local<Context> GetDebugContext(Isolate* isolate);
 
   static void EnableDebug();
+
+  static void SetLiveEditEnabled(Isolate* isolate, bool enable);
 };
 
 }  // namespace v8

@@ -23,42 +23,22 @@
 namespace v8 {
 
 using jsrt::ContextShim;
-using jsrt::IsolateShim;
 
-Local<Value> BooleanObject::New(Isolate* isolate, bool value) {
-  JsValueRef booleanObjectConstructor = IsolateShim::FromIsolate(isolate)
-                                             ->GetCurrentContextShim()
-                                             ->GetBooleanObjectConstructor();
-
-  JsValueRef newBooleanObjectRef;
-  if (jsrt::ConstructObject(booleanObjectConstructor,
-                            *Boolean::From(value),
-                            &newBooleanObjectRef) != JsNoError) {
-    return Local<Value>();
-  }
-
-  return Local<BooleanObject>::New(newBooleanObjectRef);
+Local<Value> SymbolObject::New(Isolate* isolate, Local<Symbol> value) {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
+  return Local<Value>();
 }
 
-Local<Value> BooleanObject::New(bool value) {
-  return New(IsolateShim::GetCurrentAsIsolate(), value);
+Local<Symbol> SymbolObject::ValueOf() const {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
+  return Local<Symbol>();
 }
 
-bool BooleanObject::ValueOf() const {
-  bool value;
-  if (jsrt::ValueToNative</*LIKELY*/true>(JsConvertValueToBoolean,
-                                          JsBooleanToBool,
-                                          (JsValueRef)this,
-                                          &value) != JsNoError) {
-    return false;
-  }
-
-  return value;
-}
-
-BooleanObject *BooleanObject::Cast(v8::Value *obj) {
-  CHAKRA_ASSERT(obj->IsBooleanObject());
-  return static_cast<BooleanObject*>(obj);
+SymbolObject *SymbolObject::Cast(v8::Value *obj) {
+  CHAKRA_ASSERT(obj->IsSymbolObject());
+  return static_cast<SymbolObject*>(obj);
 }
 
 }  // namespace v8

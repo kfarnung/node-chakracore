@@ -7,8 +7,6 @@
     'protocol_path': '../../third_party/WebKit/Source/platform/inspector_protocol',
   },
   'includes': [
-    '../../../v8/gypfiles/toolchain.gypi',
-    '../../../v8/gypfiles/features.gypi',
     'inspector.gypi',
     '../../third_party/WebKit/Source/platform/inspector_protocol/inspector_protocol.gypi',
   ],
@@ -115,7 +113,7 @@
         '<(SHARED_INTERMEDIATE_DIR)/include',
         '../../include',
         '../..',
-        '../../../v8'
+        '../../../'
       ],
       'sources': [
         '<@(inspector_all_sources)'
@@ -124,7 +122,7 @@
         'protocol_generated_sources',
         'inspector_injected_script',
         'inspector_debugger_script',
-        '../../../v8/src/v8.gyp:v8_libplatform',
+        '../../../chakrashim.gyp:chakrashim',
       ],
     },
   ],

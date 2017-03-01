@@ -18,44 +18,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "v8.h"
-#include "jsrtutils.h"
+#include "v8chakra.h"
 
 namespace v8 {
 
-using jsrt::IsolateShim;
-using jsrt::ContextShim;
-
-Local<Value> NumberObject::New(Isolate * isolate, double value) {
-  JsValueRef numberObjectConstructor = IsolateShim::FromIsolate(isolate)
-                        ->GetCurrentContextShim()->GetNumberObjectConstructor();
-
-  JsValueRef numberRef;
-  if (JsDoubleToNumber(value, &numberRef) != JsNoError) {
-    return Local<Value>();
-  }
-
-  JsValueRef newNumberObjectRef;
-  if (jsrt::ConstructObject(numberObjectConstructor,
-                            numberRef, &newNumberObjectRef) != JsNoError) {
-    return Local<Value>();
-  }
-
-  return Local<NumberObject>::New(newNumberObjectRef);
-}
-
-double NumberObject::ValueOf() const {
-  double value;
-  if (jsrt::ValueToDoubleLikely((JsValueRef)this, &value) != JsNoError) {
-    return 0;
-  }
-
-  return value;
-}
-
-NumberObject* NumberObject::Cast(v8::Value* obj) {
-  CHAKRA_ASSERT(obj->IsNumberObject());
-  return static_cast<NumberObject*>(obj);
+Name* Name::Cast(v8::Value* obj) {
+  CHAKRA_ASSERT(obj->IsName());
+  return static_cast<Name*>(obj);
 }
 
 }  // namespace v8

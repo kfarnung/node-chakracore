@@ -22,63 +22,33 @@
 
 namespace v8 {
 
-Local<String> Message::Get() const {
+Local<Map> Map::New(Isolate* isolate) {
   // CHAKRA-TODO: Figure out what to do here
   CHAKRA_ASSERT(false);
-  return Local<String>();
+  return Local<Map>();
 }
 
-MaybeLocal<String> Message::GetSourceLine(Local<Context> context) const {
-  // CHAKRA-TODO: Figure out how to transmit this info...?
-  return Local<String>();
-}
-
-Local<String> Message::GetSourceLine() const {
-  return FromMaybe(GetSourceLine(Local<Context>()));
-}
-
-ScriptOrigin Message::GetScriptOrigin() const {
+MaybeLocal<Value> Map::Get(Local<Context>, Local<Value>) {
   // CHAKRA-TODO: Figure out what to do here
   CHAKRA_ASSERT(false);
-  return ScriptOrigin(Local<String>());
+  return MaybeLocal<Value>();
 }
 
-Handle<Value> Message::GetScriptResourceName() const {
-  // CHAKRA-TODO: Figure out how to transmit this info...?
-  return Handle<Value>();
-}
-
-Local<StackTrace> Message::GetStackTrace() const {
+MaybeLocal<Map> Map::Set(Local<Context>, Local<Value>, Local<Value>) {
   // CHAKRA-TODO: Figure out what to do here
   CHAKRA_ASSERT(false);
-  return Local<StackTrace>();
+  return MaybeLocal<Map>();
 }
 
-Maybe<int> Message::GetLineNumber(Local<Context> context) const {
-  // CHAKRA-TODO: Figure out how to transmit this info...?
-  return Nothing<int>();
+Maybe<bool> Map::Has(Local<Context>, Local<Value>) {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
+  return Nothing<bool>();
 }
 
-int Message::GetLineNumber() const {
-  return FromMaybe(GetLineNumber(Local<Context>()));
-}
-
-Maybe<int> Message::GetStartColumn(Local<Context> context) const {
-  // CHAKRA-TODO: Figure out how to transmit this info...?
-  return Nothing<int>();
-}
-
-int Message::GetStartColumn() const {
-  return FromMaybe(GetStartColumn(Local<Context>()));
-}
-
-Maybe<int> Message::GetEndColumn(Local<Context> context) const {
-  // CHAKRA-TODO: Figure out how to transmit this info...?
-  return Nothing<int>();
-}
-
-int Message::GetEndColumn() const {
-  return FromMaybe(GetEndColumn(Local<Context>()));
+Map* Map::Cast(Value* obj) {
+  CHAKRA_ASSERT(obj->IsMap());
+  return static_cast<Map*>(obj);
 }
 
 }  // namespace v8

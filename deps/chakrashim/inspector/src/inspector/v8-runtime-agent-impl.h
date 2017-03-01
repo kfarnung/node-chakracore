@@ -113,15 +113,7 @@ class V8RuntimeAgentImpl : public protocol::Runtime::Backend {
   bool enabled() const { return m_enabled; }
 
  private:
-  bool reportMessage(V8ConsoleMessage*, bool generatePreview);
-
-  V8InspectorSessionImpl* m_session;
-  protocol::DictionaryValue* m_state;
-  protocol::Runtime::Frontend m_frontend;
-  V8InspectorImpl* m_inspector;
   bool m_enabled;
-  protocol::HashMap<String16, std::unique_ptr<v8::Global<v8::Script>>>
-      m_compiledScripts;
 
   DISALLOW_COPY_AND_ASSIGN(V8RuntimeAgentImpl);
 };
