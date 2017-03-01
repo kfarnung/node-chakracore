@@ -1,4 +1,4 @@
-#include "inspector_agent.h"
+﻿#include "inspector_agent.h"
 
 #include "inspector_socket_server.h"
 #include "env.h"
@@ -17,7 +17,10 @@
 #include <map>
 #include <sstream>
 #include <tuple>
+
+#if defined(NODE_HAVE_I18N_SUPPORT)
 #include <unicode/unistr.h>
+#endif
 
 #include <string.h>
 #include <utility>
@@ -67,31 +70,39 @@ std::string StringViewToUtf8(const StringView& view) {
     return std::string(reinterpret_cast<const char*>(view.characters8()),
                        view.length());
   }
+
+  // CHAKRA-TODO: Figure out what to do here
+  assert(false);
+
   const uint16_t* source = view.characters16();
-  const UChar* unicodeSource = reinterpret_cast<const UChar*>(source);
-  static_assert(sizeof(*source) == sizeof(*unicodeSource),
-                "sizeof(*source) == sizeof(*unicodeSource)");
+  ////const UChar* unicodeSource = reinterpret_cast<const UChar*>(source);
+  ////static_assert(sizeof(*source) == sizeof(*unicodeSource),
+  ////              "sizeof(*source) == sizeof(*unicodeSource)");
 
   size_t result_length = view.length() * sizeof(*source);
   std::string result(result_length, '\0');
-  UnicodeString utf16(unicodeSource, view.length());
+  ////UnicodeString utf16(unicodeSource, view.length());
   // ICU components for std::string compatibility are not enabled in build...
-  bool done = false;
+  /*bool done = false;
   while (!done) {
     CheckedArrayByteSink sink(&result[0], result_length);
     utf16.toUTF8(sink);
     result_length = sink.NumberOfBytesAppended();
     result.resize(result_length);
     done = !sink.Overflowed();
-  }
+  }*/
   return result;
 }
 
 std::unique_ptr<StringBuffer> Utf8ToStringView(const std::string& message) {
-  UnicodeString utf16 =
-      UnicodeString::fromUTF8(StringPiece(message.data(), message.length()));
-  StringView view(reinterpret_cast<const uint16_t*>(utf16.getBuffer()),
-                  utf16.length());
+  // CHAKRA-TODO: Figure out what to do here
+  assert(false);
+
+  ////UnicodeString utf16 =
+  ////    UnicodeString::fromUTF8(StringPiece(message.data(), message.length()));
+  ////StringView view(reinterpret_cast<const uint16_t*>(utf16.getBuffer()),
+  ////                utf16.length());
+  StringView view(reinterpret_cast<const uint16_t*>(L""), 0);
   return StringBuffer::create(view);
 }
 

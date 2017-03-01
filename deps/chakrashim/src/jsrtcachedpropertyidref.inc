@@ -101,6 +101,12 @@ DEF_IS_TYPE(isRegExp)
 DEF_IS_TYPE(isSet)
 DEF_IS_TYPE(isStringObject)
 DEF_IS_TYPE(isNumberObject)
+DEF_IS_TYPE(isArgumentsObject)
+DEF_IS_TYPE(isGeneratorObject)
+DEF_IS_TYPE(isWeakMap)
+DEF_IS_TYPE(isWeakSet)
+DEF_IS_TYPE(isSymbolObject)
+DEF_IS_TYPE(isName)
 
 
 #undef DEF

@@ -82,4 +82,10 @@ namespace v8 {
     Local<Value> data) {
     return false;
   }
+
+  void Debug::SetLiveEditEnabled(Isolate* isolate, bool enable) {
+    // CHAKRA-TODO: Figure out what to do here
+    CHAKRA_ASSERT(false);
+  }
+
 }  // namespace v8

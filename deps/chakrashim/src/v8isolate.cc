@@ -104,6 +104,12 @@ uint32_t Isolate::GetNumberOfDataSlots() {
   return 0;
 }
 
+bool Isolate::InContext() {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
+  return !Context::GetCurrent().IsEmpty();
+}
+
 Local<Context> Isolate::GetCurrentContext() {
   return Context::GetCurrent();
 }
@@ -121,6 +127,13 @@ bool Isolate::AddMessageListener(MessageCallback that, Handle<Value> data) {
 void Isolate::RemoveMessageListeners(MessageCallback that) {
   jsrt::IsolateShim::FromIsolate(this)->RemoveMessageListeners(
     reinterpret_cast<void*>(that));
+}
+
+void Isolate::SetCaptureStackTraceForUncaughtExceptions(
+  bool capture, int frame_limit,
+  StackTrace::StackTraceOptions options) {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
 }
 
 void Isolate::SetJitCodeEventHandler(JitCodeEventOptions options,
@@ -165,6 +178,11 @@ void Isolate::RemoveGCEpilogueCallback(GCCallback callback) {
 
 void Isolate::CancelTerminateExecution() {
   jsrt::IsolateShim::FromIsolate(this)->EnableExecution();
+}
+
+void Isolate::RequestInterrupt(InterruptCallback callback, void* data) {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
 }
 
 void Isolate::TerminateExecution() {
@@ -224,6 +242,28 @@ bool Isolate::GetHeapSpaceStatistics(HeapSpaceStatistics* space_statistics,
                                      size_t index) {
   // Chakra doesn't expose HEAP space stats
   return true;
+}
+
+MicrotasksScope::MicrotasksScope(Isolate* isolate, MicrotasksScope::Type type) {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
+}
+
+MicrotasksScope::~MicrotasksScope() {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
+}
+
+Isolate::DisallowJavascriptExecutionScope::DisallowJavascriptExecutionScope(
+  Isolate* isolate,
+  OnFailure on_failure) {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
+}
+
+Isolate::DisallowJavascriptExecutionScope::~DisallowJavascriptExecutionScope() {
+  // CHAKRA-TODO: Figure out what to do here
+  CHAKRA_ASSERT(false);
 }
 
 }  // namespace v8

@@ -11,11 +11,6 @@
 #include "src/inspector/protocol/Forward.h"
 #include "src/inspector/protocol/Profiler.h"
 
-namespace v8 {
-class CpuProfiler;
-class Isolate;
-}
-
 namespace v8_inspector {
 
 class V8InspectorSessionImpl;
@@ -47,25 +42,8 @@ class V8ProfilerAgentImpl : public protocol::Profiler::Backend {
   void collectSample();
 
  private:
-  String16 nextProfileId();
-
-  void startProfiling(const String16& title);
-  std::unique_ptr<protocol::Profiler::Profile> stopProfiling(
-      const String16& title, bool serialize);
-
-  bool isRecording() const;
-
-  V8InspectorSessionImpl* m_session;
-  v8::Isolate* m_isolate;
-  v8::CpuProfiler* m_profiler;
-  protocol::DictionaryValue* m_state;
-  protocol::Profiler::Frontend m_frontend;
   bool m_enabled;
-  bool m_recordingCPUProfile;
-  class ProfileDescriptor;
-  std::vector<ProfileDescriptor> m_startedProfiles;
-  String16 m_frontendInitiatedProfileId;
-
+  
   DISALLOW_COPY_AND_ASSIGN(V8ProfilerAgentImpl);
 };
 
