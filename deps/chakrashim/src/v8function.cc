@@ -33,9 +33,18 @@ MaybeLocal<Function> Function::New(Local<Context> context,
                                    Local<Value> data,
                                    int length,
                                    ConstructorBehavior behavior) {
-  // CHAKRA-TODO: Figure out what to do here
-  CHAKRA_ASSERT(false);
-  return Local<Function>();
+  Local<FunctionTemplate> funcTemplate = FunctionTemplate::New(
+    IsolateShim::GetCurrentAsIsolate(),
+    callback,
+    data,
+    Local<Signature>(),
+    length);
+
+  if (behavior == ConstructorBehavior::kThrow) {
+    funcTemplate->RemovePrototype();
+  }
+
+  return Local<Function>(funcTemplate->GetFunction());
 }
 
 MaybeLocal<Object> Function::NewInstance(Local<Context> context,

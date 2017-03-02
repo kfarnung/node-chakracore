@@ -253,11 +253,13 @@ static struct {
   void Initialize(int thread_pool_size) {}
   void PumpMessageLoop(Isolate* isolate) {}
   void Dispose() {}
+
+#if HAVE_INSPECTOR
   bool StartInspector(Environment *env, const char* script_path,
                       const node::DebugOptions& options) {
-    env->ThrowError("Node compiled with NODE_USE_V8_PLATFORM=0");
-    return false;  // make compiler happy
+    return env->inspector_agent()->Start(nullptr, script_path, options);
   }
+#endif
 
   void StartTracingAgent() {
     fprintf(stderr, "Node compiled with NODE_USE_V8_PLATFORM=0, "

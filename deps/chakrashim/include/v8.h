@@ -2065,6 +2065,7 @@ class V8_EXPORT FunctionTemplate : public Template {
                       Handle<Value> data = Handle<Value>());
   bool HasInstance(Handle<Value> object);
   void Inherit(Handle<FunctionTemplate> parent);
+  void RemovePrototype();
 };
 
 enum class PropertyHandlerFlags {
