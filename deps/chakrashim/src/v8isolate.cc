@@ -133,6 +133,9 @@ void Isolate::SetCaptureStackTraceForUncaughtExceptions(
   bool capture, int frame_limit,
   StackTrace::StackTraceOptions options) {
   // CHAKRA-TODO: Figure out what to do here
+  //
+  // kpathak: you might want to look into mechanism of captureStackTrace in
+  // chakra_shim.js.
   CHAKRA_ASSERT(false);
 }
 

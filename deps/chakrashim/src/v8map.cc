@@ -24,6 +24,8 @@ namespace v8 {
 
 Local<Map> Map::New(Isolate* isolate) {
   // CHAKRA-TODO: Figure out what to do here
+  //
+  // kpathak: All these should be easy to implement via chakra_shim.js.
   CHAKRA_ASSERT(false);
   return Local<Map>();
 }
