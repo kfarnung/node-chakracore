@@ -25,6 +25,8 @@ namespace v8 {
 MaybeLocal<RegExp> RegExp::New(Local<Context> context, Handle<String> pattern,
                                Flags flags) {
   // CHAKRA-TODO: Figure out what to do here
+  //
+  // kpathak: should be do-able through chakra_shim.js
   CHAKRA_ASSERT(false);
   return MaybeLocal<RegExp>();
 }

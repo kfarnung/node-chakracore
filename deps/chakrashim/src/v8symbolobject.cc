@@ -26,6 +26,8 @@ using jsrt::ContextShim;
 
 Local<Value> SymbolObject::New(Isolate* isolate, Local<Symbol> value) {
   // CHAKRA-TODO: Figure out what to do here
+  //
+  // kpathak: again chakra_shim.js'
   CHAKRA_ASSERT(false);
   return Local<Value>();
 }

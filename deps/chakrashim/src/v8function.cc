@@ -121,6 +121,8 @@ void Function::SetName(Handle<String> name) {
 
 Local<Value> Function::GetName() const {
   // CHAKRA-TODO: Figure out what to do here
+  //
+  // kpathak: no JSrt API to do this. probably do it in chakra_shim.js?
   CHAKRA_ASSERT(false);
   return Local<Value>();
 }
