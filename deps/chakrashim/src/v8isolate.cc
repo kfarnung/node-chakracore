@@ -246,24 +246,20 @@ bool Isolate::GetHeapSpaceStatistics(HeapSpaceStatistics* space_statistics,
 
 MicrotasksScope::MicrotasksScope(Isolate* isolate, MicrotasksScope::Type type) {
   // CHAKRA-TODO: Figure out what to do here
-  CHAKRA_ASSERT(false);
 }
 
 MicrotasksScope::~MicrotasksScope() {
   // CHAKRA-TODO: Figure out what to do here
-  CHAKRA_ASSERT(false);
 }
 
 Isolate::DisallowJavascriptExecutionScope::DisallowJavascriptExecutionScope(
   Isolate* isolate,
   OnFailure on_failure) {
   // CHAKRA-TODO: Figure out what to do here
-  CHAKRA_ASSERT(false);
 }
 
 Isolate::DisallowJavascriptExecutionScope::~DisallowJavascriptExecutionScope() {
   // CHAKRA-TODO: Figure out what to do here
-  CHAKRA_ASSERT(false);
 }
 
 }  // namespace v8

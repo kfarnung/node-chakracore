@@ -820,16 +820,12 @@ Object *Object::Cast(Value *obj) {
 
 Maybe<bool> Object::CreateDataProperty(Local<Context> context, Local<Name> key,
                                        Local<Value> value) {
-  // CHAKRA-TODO: Figure out what to do here
-  CHAKRA_ASSERT(false);
-  return Nothing<bool>();
+  return Set(context, key, value);
 }
 
 Maybe<bool> Object::CreateDataProperty(Local<Context> context, uint32_t index,
                                        Local<Value> value) {
-  // CHAKRA-TODO: Figure out what to do here
-  CHAKRA_ASSERT(false);
-  return Nothing<bool>();
+  return Set(context, index, value);
 }
 
 void Object::SetAccessorProperty(Local<Name> name, Local<Function> getter,
