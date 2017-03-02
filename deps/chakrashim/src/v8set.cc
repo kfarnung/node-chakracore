@@ -24,6 +24,8 @@ namespace v8 {
 
 Local<Set> Set::New(Isolate* isolate) {
   // CHAKRA-TODO: Figure out what to do here
+  //
+  // kpathak: chakra_shim.js
   CHAKRA_ASSERT(false);
   return Local<Set>();
 }
