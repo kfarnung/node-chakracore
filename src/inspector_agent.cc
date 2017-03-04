@@ -72,15 +72,24 @@ std::string StringViewToUtf8(const StringView& view) {
   }
 
   // CHAKRA-TODO: Figure out what to do here
-  assert(false);
-
   const uint16_t* source = view.characters16();
+  const size_t length = view.length();
+  std::string result;
+
+  // CHAKRA-TODO: HACK, assume characters are ASCII and assert when they are not.
+  for (size_t i = 0; i < length; i++) {
+    uint16_t wCh = source[i];
+    assert((wCh & 0xFF80) == 0);
+
+    result.append(1, static_cast<char>(wCh));
+  }
+
   ////const UChar* unicodeSource = reinterpret_cast<const UChar*>(source);
   ////static_assert(sizeof(*source) == sizeof(*unicodeSource),
   ////              "sizeof(*source) == sizeof(*unicodeSource)");
 
-  size_t result_length = view.length() * sizeof(*source);
-  std::string result(result_length, '\0');
+  ////size_t result_length = view.length() * sizeof(*source);
+  ////std::string result(result_length, '\0');
   ////UnicodeString utf16(unicodeSource, view.length());
   // ICU components for std::string compatibility are not enabled in build...
   /*bool done = false;
@@ -96,13 +105,23 @@ std::string StringViewToUtf8(const StringView& view) {
 
 std::unique_ptr<StringBuffer> Utf8ToStringView(const std::string& message) {
   // CHAKRA-TODO: Figure out what to do here
-  assert(false);
 
   ////UnicodeString utf16 =
   ////    UnicodeString::fromUTF8(StringPiece(message.data(), message.length()));
   ////StringView view(reinterpret_cast<const uint16_t*>(utf16.getBuffer()),
   ////                utf16.length());
-  StringView view(reinterpret_cast<const uint16_t*>(L""), 0);
+
+  // CHAKRA-TODO: HACK, assume characters are ASCII and assert when they are not.
+  std::vector<uint16_t> wChars;
+  for (const char &ch : message) {
+    assert((ch & 0x80) == 0);
+
+    wChars.push_back(static_cast<const uint16_t>(ch));
+  }
+  
+  wChars.push_back('\0');
+
+  StringView view(wChars.data(), wChars.size() - 1);
   return StringBuffer::create(view);
 }
 
@@ -614,8 +633,12 @@ void AgentImpl::PostIncomingMessage(InspectorAction action, int session_id,
   if (AppendMessage(&incoming_message_queue_, action, session_id,
                     Utf8ToStringView(message))) {
     v8::Isolate* isolate = parent_env_->isolate();
+
+#if NODE_USE_V8_PLATFORM
     platform_->CallOnForegroundThread(isolate,
                                       new DispatchOnInspectorBackendTask(this));
+#endif // NODE_USE_V8_PLATFORM
+
     isolate->RequestInterrupt(InterruptCallback, this);
   }
   NotifyMessageReceived();

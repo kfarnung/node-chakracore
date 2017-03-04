@@ -2,7 +2,8 @@
   'variables': {
     'library_files': [
       'lib/chakra_shim.js',
-      'lib/chakra_debug.js'
+      'lib/chakra_debug.js',
+      'lib/chakra_inspector.js'
     ],
   },
 
@@ -92,6 +93,8 @@
         'src/jsrtcontextshim.h',
         'src/jsrtdebug.cc',
         'src/jsrtdebug.h',
+        'src/jsrtinspector.cc',
+        'src/jsrtinspector.h',
         'src/jsrtisolateshim.cc',
         'src/jsrtisolateshim.h',
         'src/jsrtpromise.cc',

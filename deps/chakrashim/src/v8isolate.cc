@@ -136,7 +136,6 @@ void Isolate::SetCaptureStackTraceForUncaughtExceptions(
   //
   // kpathak: you might want to look into mechanism of captureStackTrace in
   // chakra_shim.js.
-  CHAKRA_ASSERT(false);
 }
 
 void Isolate::SetJitCodeEventHandler(JitCodeEventOptions options,
@@ -184,8 +183,7 @@ void Isolate::CancelTerminateExecution() {
 }
 
 void Isolate::RequestInterrupt(InterruptCallback callback, void* data) {
-  // CHAKRA-TODO: Figure out what to do here
-  CHAKRA_ASSERT(false);
+  jsrt::IsolateShim::FromIsolate(this)->RequestInterrupt(callback, data);
 }
 
 void Isolate::TerminateExecution() {

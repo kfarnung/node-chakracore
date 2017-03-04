@@ -10,6 +10,8 @@
 #include "src/inspector/v8-inspector-impl.h"
 #include "src/inspector/v8-stack-trace-impl.h"
 
+#include "src/jsrtinspector.h"
+
 namespace v8_inspector {
 
 V8Debugger::V8Debugger(v8::Isolate* isolate, V8InspectorImpl* inspector)
@@ -18,14 +20,22 @@ V8Debugger::V8Debugger(v8::Isolate* isolate, V8InspectorImpl* inspector)
       m_breakpointsActivated(true),
       m_maxAsyncCallStackDepth(0) {}
 
-V8Debugger::~V8Debugger() {}
+V8Debugger::~V8Debugger() {
+  if (enabled()) {
+    jsrt::Inspector::SetDebugEventHandler(nullptr, nullptr);
+  }
+}
 
 void V8Debugger::enable() {
   if (m_enableCount++) return;
+
+  jsrt::Inspector::SetDebugEventHandler(V8Debugger::JsDiagDebugEventHandler, this);
 }
 
 void V8Debugger::disable() {
   if (--m_enableCount) return;
+
+  jsrt::Inspector::SetDebugEventHandler(nullptr, nullptr);
 }
 
 bool V8Debugger::enabled() const { return m_enableCount > 0; }
@@ -155,6 +165,46 @@ void V8Debugger::unmuteScriptParsedEvents() {
 std::unique_ptr<V8StackTraceImpl> V8Debugger::captureStackTrace(
     bool fullStack) {
     return std::unique_ptr<V8StackTraceImpl>(nullptr);
+}
+
+void V8Debugger::JsDiagDebugEventHandler(
+  JsDiagDebugEvent debugEvent,
+  JsValueRef eventData,
+  void* callbackState) {
+  if (callbackState != nullptr) {
+    static_cast<V8Debugger*>(callbackState)->DebugEventHandler(debugEvent, eventData);
+  }
+}
+
+void V8Debugger::DebugEventHandler(
+  JsDiagDebugEvent debugEvent,
+  JsValueRef eventData) {
+
+  // TODO
+  switch (debugEvent) {
+  case JsDiagDebugEventSourceCompile:
+    // Raise an event
+    // Process pending breakpoints
+    break;
+
+  case JsDiagDebugEventCompileError:
+    // No-op
+    break;
+
+  case JsDiagDebugEventBreakpoint:
+  case JsDiagDebugEventStepComplete:
+  case JsDiagDebugEventDebuggerStatement:
+    // These are all handled the same way
+    break;
+
+  case JsDiagDebugEventAsyncBreak:
+    // This is where we pump the event loop
+    break;
+
+  case JsDiagDebugEventRuntimeException:
+    // Similar to break, but type is exception
+    break;
+  }
 }
 
 }  // namespace v8_inspector

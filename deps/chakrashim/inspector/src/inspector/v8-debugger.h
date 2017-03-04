@@ -101,6 +101,15 @@ class V8Debugger {
   V8InspectorImpl* inspector() { return m_inspector; }
 
  private:
+  static void CHAKRA_CALLBACK JsDiagDebugEventHandler(
+    JsDiagDebugEvent debugEvent,
+    JsValueRef eventData,
+    void* callbackState);
+
+  void DebugEventHandler(
+    JsDiagDebugEvent debugEvent,
+    JsValueRef eventData);
+
   V8InspectorImpl* m_inspector;
   int m_enableCount;
   bool m_breakpointsActivated;
