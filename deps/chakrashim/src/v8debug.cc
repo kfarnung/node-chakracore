@@ -24,9 +24,14 @@
 namespace v8 {
 
   THREAD_LOCAL bool g_EnableDebug = false;
+  THREAD_LOCAL bool g_EnableInspector = false;
 
   void Debug::EnableDebug() {
     g_EnableDebug = true;
+  }
+
+  void Debug::EnableInspector() {
+    g_EnableInspector = true;
   }
 
   Local<Context> Debug::GetDebugContext(Isolate* isolate) {

@@ -55,7 +55,11 @@ static const char skipAllPauses[] = "skipAllPauses";
 V8DebuggerAgentImpl::V8DebuggerAgentImpl(
     V8InspectorSessionImpl* session, protocol::FrontendChannel* frontendChannel,
     protocol::DictionaryValue* state)
-    : m_enabled(false),
+    : m_inspector(session->inspector()),
+      m_debugger(m_inspector->debugger()),
+      m_enabled(false),
+      m_state(state),
+      m_frontend(frontendChannel),
       m_isolate(session->inspector()->isolate()) {
 }
 
@@ -67,6 +71,7 @@ void V8DebuggerAgentImpl::enable(ErrorString* errorString) {
   if (enabled()) return;
 
   m_enabled = true;
+  m_debugger->enable();
 }
 
 void V8DebuggerAgentImpl::disable(ErrorString*) {

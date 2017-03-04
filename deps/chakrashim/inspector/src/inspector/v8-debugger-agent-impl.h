@@ -14,7 +14,9 @@
 
 namespace v8_inspector {
 
+class V8Debugger;
 class V8DebuggerScript;
+class V8InspectorImpl;
 class V8InspectorSessionImpl;
 
 using protocol::ErrorString;
@@ -137,7 +139,11 @@ class V8DebuggerAgentImpl : public protocol::Debugger::Backend {
   v8::Isolate* isolate() { return m_isolate; }
 
  private:
+  V8InspectorImpl* m_inspector;
+  V8Debugger* m_debugger;
   bool m_enabled;
+  protocol::DictionaryValue* m_state;
+  protocol::Debugger::Frontend m_frontend;
   v8::Isolate* m_isolate;
   
   DISALLOW_COPY_AND_ASSIGN(V8DebuggerAgentImpl);

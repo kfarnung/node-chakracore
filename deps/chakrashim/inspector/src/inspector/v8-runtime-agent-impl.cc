@@ -49,7 +49,11 @@ namespace v8_inspector {
 V8RuntimeAgentImpl::V8RuntimeAgentImpl(
     V8InspectorSessionImpl* session, protocol::FrontendChannel* FrontendChannel,
     protocol::DictionaryValue* state)
-    : m_enabled(false) {}
+    : m_session(session),
+      m_state(state),
+      m_frontend(FrontendChannel),
+      m_inspector(session->inspector()),
+      m_enabled(false) {}
 
 V8RuntimeAgentImpl::~V8RuntimeAgentImpl() {}
 
@@ -154,6 +158,14 @@ void V8RuntimeAgentImpl::inspect(
 }
 
 void V8RuntimeAgentImpl::messageAdded(V8ConsoleMessage* message) {
+  if (m_enabled) reportMessage(message, true);
+}
+
+bool V8RuntimeAgentImpl::reportMessage(V8ConsoleMessage* message,
+  bool generatePreview) {
+  message->reportToFrontend(&m_frontend, m_session, generatePreview);
+  m_frontend.flush();
+  return m_inspector->hasConsoleMessageStorage(m_session->contextGroupId());
 }
 
 }  // namespace v8_inspector
