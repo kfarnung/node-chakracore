@@ -247,14 +247,6 @@ bool Isolate::GetHeapSpaceStatistics(HeapSpaceStatistics* space_statistics,
   return true;
 }
 
-MicrotasksScope::MicrotasksScope(Isolate* isolate, MicrotasksScope::Type type) {
-  // CHAKRA-TODO: Figure out what to do here
-}
-
-MicrotasksScope::~MicrotasksScope() {
-  // CHAKRA-TODO: Figure out what to do here
-}
-
 Isolate::DisallowJavascriptExecutionScope::DisallowJavascriptExecutionScope(
   Isolate* isolate,
   OnFailure on_failure) {
