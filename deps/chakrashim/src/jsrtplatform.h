@@ -18,41 +18,32 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef DEFTYPE
-#define DEFTYPE(T)
-#endif
+#pragma once
 
-#ifndef DEFMETHOD
-#define DEFMETHOD(T, M)
-#endif
+#include <map>
+#include <queue>
 
-// These global constructors will be cached
-DEFTYPE(Boolean)
-DEFTYPE(Date)
-DEFTYPE(Number)
-DEFTYPE(Object)
-DEFTYPE(Proxy)
-DEFTYPE(String)
-DEFTYPE(Array)
-DEFTYPE(Uint8Array)
-DEFTYPE(Uint8ClampedArray)
-DEFTYPE(Int8Array)
-DEFTYPE(Uint16Array)
-DEFTYPE(Int16Array)
-DEFTYPE(Uint32Array)
-DEFTYPE(Int32Array)
-DEFTYPE(Float32Array)
-DEFTYPE(Float64Array)
-DEFTYPE(RegExp)
+#include "v8-platform.h"
+#include <uv.h>
 
+namespace jsrt {
 
+class DefaultPlatform : public v8::Platform {
+ public:
+  DefaultPlatform();
+  virtual ~DefaultPlatform();
 
-// These prototype functions will be cached/shimmed
-DEFMETHOD(Object,         hasOwnProperty)
-DEFMETHOD(Object,         toString)
-DEFMETHOD(String,         concat)
-DEFMETHOD(Array,          push)
+  bool PumpMessageLoop(v8::Isolate* isolate);
 
+  virtual void CallOnBackgroundThread(v8::Task* task,
+                                      ExpectedRuntime expected_runtime) override;
+  virtual void CallOnForegroundThread(v8::Isolate* isolate, v8::Task* task) override;
+  virtual double MonotonicallyIncreasingTime() override;
 
-#undef DEFTYPE
-#undef DEFMETHOD
+ private:
+  v8::Task* PopTaskInMainThreadQueue(v8::Isolate* isolate);
+  uv_mutex_t m_lock;
+  std::map<v8::Isolate*, std::queue<v8::Task*> > main_thread_queue_;
+};
+
+}  // namespace jsrt

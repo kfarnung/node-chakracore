@@ -83,34 +83,98 @@ static int GetCheckedInt(v8::Local<v8::Context> context,
                               ->Value());
 }
 
-V8DebuggerScript::V8DebuggerScript(v8::Local<v8::Context> context,
-                                   v8::Local<v8::Object> object,
-                                   bool isLiveEdit) {
-  v8::Isolate* isolate = context->GetIsolate();
-  v8::Local<v8::Value> idValue = GetChecked(context, object, "id");
-  DCHECK(!idValue.IsEmpty() && idValue->IsInt32());
-  m_id = String16::fromInteger(idValue->Int32Value(context).FromJust());
+static JsErrorCode GetNamedIntValue(JsValueRef object, const char *propName, int *value) {
+  JsErrorCode err = JsNoError;
 
-  m_url = toProtocolStringWithTypeCheck(GetChecked(context, object, "name"));
+  JsPropertyIdRef propId;
+  err = JsCreatePropertyId(propName, strlen(propName), &propId);
+  if (err != JsNoError) {
+    return err;
+  }
+
+  JsValueRef propValue;
+  err = JsGetProperty(object, propId, &propValue);
+  if (err != JsNoError) {
+    return err;
+  }
+
+  err = JsNumberToInt(propValue, value);
+  if (err != JsNoError) {
+    return err;
+  }
+
+  return JsNoError;
+}
+
+static JsErrorCode GetNamedStringValue(JsValueRef object, const char *propName, String16 *value) {
+  JsErrorCode err = JsNoError;
+
+  JsPropertyIdRef propId;
+  err = JsCreatePropertyId(propName, strlen(propName), &propId);
+  if (err != JsNoError) {
+    return err;
+  }
+
+  JsValueRef propValue;
+  err = JsGetProperty(object, propId, &propValue);
+  if (err != JsNoError) {
+    return err;
+  }
+
+  int stringLength = 0;
+  err = JsGetStringLength(propValue, &stringLength);
+  if (err != JsNoError) {
+    return err;
+  }
+
+  std::unique_ptr<UChar[]> buffer(new UChar[stringLength]);
+  err = JsCopyStringUtf16(propValue, 0, stringLength, buffer.get(), nullptr);
+  if (err != JsNoError) {
+    return err;
+  }
+
+  String16 str(buffer.get(), stringLength);
+  value->swap(str);
+
+  return JsNoError;
+}
+
+V8DebuggerScript::V8DebuggerScript(JsValueRef scriptData, bool isLiveEdit)
+  : m_startLine(0),
+    m_startColumn(0),
+    m_endColumn(0),
+    m_executionContextId(1),
+    m_isLiveEdit(false) {
+  int intValue;
+
+  if (GetNamedIntValue(scriptData, "scriptId", &intValue) == JsNoError) {
+    m_id = String16::fromInteger(intValue);
+  }
+
+  if (GetNamedIntValue(scriptData, "lineCount", &intValue) == JsNoError) {
+    m_endLine = intValue;
+  }
+
+  String16 strValue;
+  if (GetNamedStringValue(scriptData, "fileName", &strValue) == JsNoError) {
+    m_url = strValue;
+  }
+  else if (GetNamedStringValue(scriptData, "scriptType", &strValue) == JsNoError) {
+    m_url = strValue;
+  }
+  
+  /*m_url = toProtocolStringWithTypeCheck(GetChecked(context, object, "name"));
   m_sourceURL =
       toProtocolStringWithTypeCheck(GetChecked(context, object, "sourceURL"));
   m_sourceMappingURL = toProtocolStringWithTypeCheck(
       GetChecked(context, object, "sourceMappingURL"));
-  m_startLine = GetCheckedInt(context, object, "startLine");
-  m_startColumn = GetCheckedInt(context, object, "startColumn");
-  m_endLine = GetCheckedInt(context, object, "endLine");
-  m_endColumn = GetCheckedInt(context, object, "endColumn");
-  m_executionContextAuxData = toProtocolStringWithTypeCheck(
-      GetChecked(context, object, "executionContextAuxData"));
-  m_executionContextId = GetCheckedInt(context, object, "executionContextId");
-  m_isLiveEdit = isLiveEdit;
-
+  
   v8::Local<v8::Value> sourceValue;
   if (!object->Get(context, toV8StringInternalized(isolate, "source"))
            .ToLocal(&sourceValue) ||
       !sourceValue->IsString())
     return;
-  setSource(isolate, sourceValue.As<v8::String>());
+  setSource(isolate, sourceValue.As<v8::String>());*/
 }
 
 V8DebuggerScript::~V8DebuggerScript() {}

@@ -308,6 +308,7 @@ class Local {
   friend class Private;
   friend class PropertyDescriptor;
   friend class Proxy;
+  friend class RegExp;
   friend class Signature;
   friend class Script;
   friend class StackFrame;
@@ -1812,8 +1813,16 @@ class V8_EXPORT Promise : public Object {
   };
 
   Local<Promise> Chain(Handle<Function> handler);
-  Local<Promise> Catch(Handle<Function> handler);
-  Local<Promise> Then(Handle<Function> handler);
+
+  V8_DEPRECATED("Use maybe version",
+                Local<Promise> Catch(Local<Function> handler));
+  V8_WARN_UNUSED_RESULT MaybeLocal<Promise> Catch(Local<Context> context,
+                                                  Local<Function> handler);
+
+  V8_DEPRECATED("Use maybe version",
+                Local<Promise> Then(Local<Function> handler));
+  V8_WARN_UNUSED_RESULT MaybeLocal<Promise> Then(Local<Context> context,
+                                                 Local<Function> handler);
 
   bool HasHandler();
   static Promise* Cast(Value* obj);
@@ -2745,6 +2754,8 @@ class V8_EXPORT Context {
   void Exit();
 
   Isolate* GetIsolate();
+
+  enum EmbedderDataFields { kDebugIdIndex = 0 };
   void* GetAlignedPointerFromEmbedderData(int index);
   void SetAlignedPointerInEmbedderData(int index, void* value);
   void SetEmbedderData(int index, Local<Value> value);

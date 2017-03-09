@@ -105,9 +105,7 @@ uint32_t Isolate::GetNumberOfDataSlots() {
 }
 
 bool Isolate::InContext() {
-  // CHAKRA-TODO: Figure out what to do here
-  CHAKRA_ASSERT(false);
-  return !Context::GetCurrent().IsEmpty();
+  return !GetCurrentContext().IsEmpty();
 }
 
 Local<Context> Isolate::GetCurrentContext() {

@@ -578,6 +578,8 @@ DECLARE_GETOBJECT(StringObjectConstructor,
                   globalConstructor[GlobalType::String])
 DECLARE_GETOBJECT(DateConstructor,
                   globalConstructor[GlobalType::Date])
+DECLARE_GETOBJECT(RegExpConstructor,
+                  globalConstructor[GlobalType::RegExp])
 DECLARE_GETOBJECT(ProxyConstructor,
                   globalConstructor[GlobalType::Proxy])
 DECLARE_GETOBJECT(HasOwnPropertyFunction,

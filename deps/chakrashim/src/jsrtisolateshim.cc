@@ -549,7 +549,7 @@ ContextShim * IsolateShim::GetContextShimOfObject(JsValueRef valueRef) {
 }
 
 void IsolateShim::RequestInterrupt(v8::InterruptCallback callback, void* data) {
-  Inspector::RequestAsyncBreak(this->GetRuntimeHandle());
+  Inspector::RequestAsyncBreak(this->GetRuntimeHandle(), callback, data);
 }
 
 void IsolateShim::DisableExecution() {

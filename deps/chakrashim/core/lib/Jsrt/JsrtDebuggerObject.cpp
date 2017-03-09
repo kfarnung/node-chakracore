@@ -446,7 +446,7 @@ Js::DynamicObject * JsrtDebuggerStackFrame::GetLocalsObject(Js::ScriptContext* s
     return propertiesObject;
 }
 
-bool JsrtDebuggerStackFrame::Evaluate(Js::ScriptContext* scriptContext, const char16 *source, int sourceLength, bool isLibraryCode, Js::DynamicObject** evalResult)
+bool JsrtDebuggerStackFrame::Evaluate(Js::ScriptContext* scriptContext, const char16 *source, int sourceLength, bool isLibraryCode, bool returnByValue, Js::DynamicObject** evalResult)
 {
     *evalResult = nullptr;
     bool success = false;
@@ -506,7 +506,13 @@ bool JsrtDebuggerStackFrame::Evaluate(Js::ScriptContext* scriptContext, const ch
             resolvedObject.typeId = Js::JavascriptOperators::GetTypeId(resolvedObject.obj);
             JsrtDebuggerObjectBase::CreateDebuggerObject<JsrtDebuggerObjectProperty>(this->debuggerObjectsManager, resolvedObject, scriptContext, [&](Js::Var marshaledObj)
             {
-                *evalResult = (Js::DynamicObject*)marshaledObj;
+                Js::DynamicObject *debuggerObj = (Js::DynamicObject*)marshaledObj;
+                if (returnByValue)
+                {
+                    JsrtDebugUtils::AddPropertyToObject(debuggerObj, JsrtDebugPropertyId::value, resolvedObject.obj, scriptContext);
+                }
+
+                *evalResult = debuggerObj;
             });
         }
     }

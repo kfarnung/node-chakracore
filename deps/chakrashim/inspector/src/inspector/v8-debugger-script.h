@@ -39,7 +39,7 @@ namespace v8_inspector {
 
 class V8DebuggerScript {
  public:
-  V8DebuggerScript(v8::Local<v8::Context>, v8::Local<v8::Object>,
+  V8DebuggerScript(JsValueRef scriptData,
                    bool isLiveEdit);
   ~V8DebuggerScript();
 

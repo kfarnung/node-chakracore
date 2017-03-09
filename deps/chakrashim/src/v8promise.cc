@@ -18,41 +18,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef DEFTYPE
-#define DEFTYPE(T)
-#endif
+#include "v8chakra.h"
 
-#ifndef DEFMETHOD
-#define DEFMETHOD(T, M)
-#endif
+namespace v8 {
 
-// These global constructors will be cached
-DEFTYPE(Boolean)
-DEFTYPE(Date)
-DEFTYPE(Number)
-DEFTYPE(Object)
-DEFTYPE(Proxy)
-DEFTYPE(String)
-DEFTYPE(Array)
-DEFTYPE(Uint8Array)
-DEFTYPE(Uint8ClampedArray)
-DEFTYPE(Int8Array)
-DEFTYPE(Uint16Array)
-DEFTYPE(Int16Array)
-DEFTYPE(Uint32Array)
-DEFTYPE(Int32Array)
-DEFTYPE(Float32Array)
-DEFTYPE(Float64Array)
-DEFTYPE(RegExp)
+MaybeLocal<Promise> Promise::Then(Local<Context> context,
+                                  Local<Function> handler) {
+  CHAKRA_ASSERT(false);
+  return Local<Promise>();
+}
 
+MaybeLocal<Promise> Promise::Catch(Local<Context> context,
+                                   Local<Function> handler) {
+  CHAKRA_ASSERT(false);
+  return Local<Promise>();
+}
 
+Promise *Promise::Cast(v8::Value *obj) {
+  CHAKRA_ASSERT(obj->IsPromise());
+  return static_cast<Promise*>(obj);
+}
 
-// These prototype functions will be cached/shimmed
-DEFMETHOD(Object,         hasOwnProperty)
-DEFMETHOD(Object,         toString)
-DEFMETHOD(String,         concat)
-DEFMETHOD(Array,          push)
-
-
-#undef DEFTYPE
-#undef DEFMETHOD
+}  // namespace v8

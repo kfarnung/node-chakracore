@@ -106,16 +106,29 @@ class V8Debugger {
     JsValueRef eventData,
     void* callbackState);
 
+  v8::Local<v8::Context> debuggerContext() const;
+
   void DebugEventHandler(
     JsDiagDebugEvent debugEvent,
     JsValueRef eventData);
 
+  void HandleSourceEvents(JsValueRef eventData, bool success);
+  void HandleBreak(JsValueRef eventData);
+
+  void ClearBreakpoints();
+
+  v8::Isolate* m_isolate;
   V8InspectorImpl* m_inspector;
+  int m_lastContextId;
   int m_enableCount;
   bool m_breakpointsActivated;
+  v8::Global<v8::Context> m_debuggerContext;
   v8::Local<v8::Context> m_pausedContext;
-  
+  bool m_runningNestedMessageLoop;
+  int m_ignoreScriptParsedEventsCounter;
+
   int m_maxAsyncCallStackDepth;
+  bool m_pauseOnNextStatement;
   
   DISALLOW_COPY_AND_ASSIGN(V8Debugger);
 };

@@ -600,6 +600,7 @@ typedef unsigned __int32 uint32_t;
             _In_ JsValueRef expression,
             _In_ unsigned int stackFrameIndex,
             _In_ JsParseScriptAttributes parseAttributes,
+            _In_ bool returnByValue,
             _Out_ JsValueRef *evalResult);
 
     /////////////////////

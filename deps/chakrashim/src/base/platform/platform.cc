@@ -37,7 +37,7 @@ void OS::VPrintError(const char* format, va_list args) {
 int OS::SNPrintF(char* str, int length, const char* format, ...) {
   va_list args;
   va_start(args, format);
-  int result = _vsnprintf(str, length, format, args);
+  int result = vsnprintf(str, length, format, args);
   va_end(args);
   return result;
 }

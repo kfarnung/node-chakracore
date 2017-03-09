@@ -675,6 +675,7 @@ CHAKRA_API JsDiagEvaluate(
     _In_ JsValueRef expressionVal,
     _In_ unsigned int stackFrameIndex,
     _In_ JsParseScriptAttributes parseAttributes,
+    _In_ bool returnByValue,
     _Out_ JsValueRef *evalResult)
 {
     return ContextAPINoScriptWrapper_NoRecord([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
@@ -742,7 +743,7 @@ CHAKRA_API JsDiagEvaluate(
         }
 
         Js::DynamicObject* result = nullptr;
-        bool success = debuggerStackFrame->Evaluate(scriptContext, expression, static_cast<int>(len), false, &result);
+        bool success = debuggerStackFrame->Evaluate(scriptContext, expression, static_cast<int>(len), false, returnByValue, &result);
 
         if (result != nullptr)
         {

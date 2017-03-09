@@ -313,10 +313,22 @@ void JsrtDebugManager::SetResumeType(BREAKRESUMEACTION resumeAction)
 
 bool JsrtDebugManager::EnableAsyncBreak(Js::ScriptContext* scriptContext)
 {
+    // A context may have been pushed onto the list, but hasn't necessarily
+    // finished initialization.
+    Js::DebugContext* debugContext = scriptContext->GetDebugContext();
+    if (debugContext == nullptr) {
+        return false;
+    }
+
+    Js::ProbeContainer* probeContainer = debugContext->GetProbeContainer();
+    if (probeContainer == nullptr) {
+        return false;
+    }
+
     // This can be called when we are already at break
-    if (!scriptContext->GetDebugContext()->GetProbeContainer()->IsAsyncActivate())
+    if (!probeContainer->IsAsyncActivate())
     {
-        scriptContext->GetDebugContext()->GetProbeContainer()->AsyncActivate(this);
+        probeContainer->AsyncActivate(this);
         if (Js::Configuration::Global.EnableJitInDebugMode())
         {
             scriptContext->GetThreadContext()->GetDebugManager()->GetDebuggingFlags()->SetForceInterpreter(true);

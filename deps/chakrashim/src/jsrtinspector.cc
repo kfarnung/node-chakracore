@@ -18,8 +18,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include <string>
+
 #include "v8chakra.h"
 #include "jsrtinspector.h"
+#include "jsrtinspectorhelpers.h"
 
 namespace v8 {
   extern THREAD_LOCAL bool g_EnableInspector;
@@ -113,8 +116,44 @@ namespace jsrt {
     return JS_INVALID_REFERENCE;
   }
 
+  class InspectorBreakQueue {
+   public:
+    InspectorBreakQueue();
+    ~InspectorBreakQueue();
+    void Push(v8::InterruptCallback callback, void *data);
+    void Swap(std::vector<std::pair<v8::InterruptCallback, void*>> *other);
+
+   private:
+    std::vector<std::pair<v8::InterruptCallback, void*>> m_queue;
+    uv_mutex_t m_queueMutex;
+  };
+
+  InspectorBreakQueue::InspectorBreakQueue() {
+    int err = uv_mutex_init(&m_queueMutex);
+    CHAKRA_VERIFY(err == 0);
+  }
+
+  InspectorBreakQueue::~InspectorBreakQueue() {
+    uv_mutex_destroy(&m_queueMutex);
+  }
+
+  void InspectorBreakQueue::Push(v8::InterruptCallback callback, void *data) {
+    uv_mutex_lock(&m_queueMutex);
+    m_queue.emplace_back(callback, data);
+    uv_mutex_unlock(&m_queueMutex);
+  }
+
+  void InspectorBreakQueue::Swap(
+      std::vector<std::pair<v8::InterruptCallback, void*>> *other) {
+    uv_mutex_lock(&m_queueMutex);
+    m_queue.swap(*other);
+    uv_mutex_unlock(&m_queueMutex);
+  }
+
   JsDiagDebugEventCallback Inspector::s_callback = nullptr;
   void* Inspector::s_callbackState = nullptr;
+  std::unique_ptr<InspectorBreakQueue> Inspector::s_breakQueue =
+      std::unique_ptr<InspectorBreakQueue>(new InspectorBreakQueue());
 
   bool Inspector::IsInspectorEnabled() {
     return v8::g_EnableInspector;
@@ -126,9 +165,17 @@ namespace jsrt {
     CHAKRA_VERIFY_NOERROR(errorCode);
   }
 
-  void Inspector::RequestAsyncBreak(JsRuntimeHandle runtime) {
+  void Inspector::RequestAsyncBreak(JsRuntimeHandle runtime,
+                                    v8::InterruptCallback callback,
+                                    void* data) {
+    s_breakQueue->Push(callback, data);
     JsErrorCode errorCode = JsDiagRequestAsyncBreak(runtime);
     CHAKRA_VERIFY_NOERROR(errorCode);
+  }
+
+  void Inspector::RequestAsyncBreak(v8::Isolate* isolate) {
+    JsRuntimeHandle handle = jsrt::IsolateShim::FromIsolate(isolate)->GetRuntimeHandle();
+    JsDiagRequestAsyncBreak(handle);
   }
 
   void Inspector::SetChakraDebugObject(JsValueRef chakraDebugObject) {
@@ -144,7 +191,8 @@ namespace jsrt {
       "JsDiagRemoveBreakpoint", JsRemoveBreakpoint);
   }
 
-  void Inspector::SetDebugEventHandler(JsDiagDebugEventCallback callback, void* callbackState) {
+  void Inspector::SetDebugEventHandler(JsDiagDebugEventCallback callback,
+                                       void* callbackState) {
     CHAKRA_ASSERT(s_callback == nullptr || callback == nullptr);
 
     s_callback = callback;
@@ -157,12 +205,46 @@ namespace jsrt {
     }
   }
 
+  void Inspector::ClearBreakpoints() {
+    JsValueRef breakpoints;
+    CHAKRA_VERIFY_NOERROR(JsDiagGetBreakpoints(&breakpoints));
+
+    int length;
+    CHAKRA_VERIFY_NOERROR(jsrt::InspectorHelpers::GetIntProperty(breakpoints,
+                                                                "length",
+                                                                &length));
+
+    for (int i = 0; i < length; i++) {
+      JsValueRef index;
+      CHAKRA_VERIFY_NOERROR(JsIntToNumber(i, &index));
+
+      JsValueRef breakpoint;
+      CHAKRA_VERIFY_NOERROR(JsGetIndexedProperty(breakpoints, index,
+                                                 &breakpoint));
+
+      int breakpointId;
+      CHAKRA_VERIFY_NOERROR(jsrt::InspectorHelpers::GetIntProperty(
+          breakpoint, "breakpointId", &breakpointId));
+
+      CHAKRA_VERIFY_NOERROR(JsDiagRemoveBreakpoint(breakpointId));
+    }
+  }
+
   void CHAKRA_CALLBACK Inspector::JsDiagDebugEventHandler(
     JsDiagDebugEvent debugEvent,
     JsValueRef eventData,
     void* callbackState) {
     // TTD_NODE
     JsTTDPauseTimeTravelBeforeRuntimeOperation();
+
+    if (debugEvent == JsDiagDebugEventAsyncBreak) {
+      std::vector<std::pair<v8::InterruptCallback, void*>> interruptCallbacks;
+      s_breakQueue->Swap(&interruptCallbacks);
+
+      for (auto const &item : interruptCallbacks) {
+        item.first(IsolateShim::GetCurrentAsIsolate(), item.second);
+      }
+    }
 
     if (s_callback != nullptr)
     {

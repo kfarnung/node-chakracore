@@ -20,15 +20,24 @@
 
 #pragma once
 
+#include <v8.h>
+
 namespace jsrt {
+
+class InspectorBreakQueue;
 
 class Inspector {
  public:
   static bool IsInspectorEnabled();
   static void StartDebugging(JsRuntimeHandle runtime);
-  static void RequestAsyncBreak(JsRuntimeHandle runtime);
+  static void RequestAsyncBreak(JsRuntimeHandle runtime,
+                                v8::InterruptCallback callback,
+                                void* data);
+  static void RequestAsyncBreak(v8::Isolate* isolate);
   static void SetChakraDebugObject(JsValueRef chakraDebugObject);
-  static void SetDebugEventHandler(JsDiagDebugEventCallback callback, void* callbackState);
+  static void SetDebugEventHandler(JsDiagDebugEventCallback callback,
+                                   void* callbackState);
+  static void ClearBreakpoints();
 
  private:
   static void CHAKRA_CALLBACK JsDiagDebugEventHandler(
@@ -41,5 +50,6 @@ class Inspector {
 
   static JsDiagDebugEventCallback s_callback;
   static void* s_callbackState;
+  static std::unique_ptr<InspectorBreakQueue> s_breakQueue;
 };
 }  // namespace jsrt
