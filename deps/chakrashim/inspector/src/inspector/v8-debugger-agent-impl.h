@@ -158,6 +158,7 @@ class V8DebuggerAgentImpl : public protocol::Debugger::Backend {
   bool assertPaused(ErrorString*);
   void clearBreakDetails();
 
+  bool isCurrentCallStackEmptyOrBlackboxed();
   bool isTopPausedCallFrameBlackboxed();
   bool isCallFrameWithUnknownScriptOrBlackboxed(JavaScriptCallFrame*);
 

@@ -129,7 +129,8 @@ class V8Debugger {
 
   int m_maxAsyncCallStackDepth;
   bool m_pauseOnNextStatement;
-  
+  protocol::HashMap<V8DebuggerAgentImpl*, int> m_maxAsyncCallStackDepthMap;
+
   DISALLOW_COPY_AND_ASSIGN(V8Debugger);
 };
 

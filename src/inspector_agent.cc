@@ -1,4 +1,4 @@
-﻿#include "inspector_agent.h"
+#include "inspector_agent.h"
 
 #include "inspector_socket_server.h"
 #include "env.h"
@@ -118,7 +118,7 @@ std::unique_ptr<StringBuffer> Utf8ToStringView(const std::string& message) {
 
     wChars.push_back(static_cast<const uint16_t>(ch));
   }
-  
+
   wChars.push_back('\0');
 
   StringView view(wChars.data(), wChars.size() - 1);
@@ -639,10 +639,8 @@ void AgentImpl::PostIncomingMessage(InspectorAction action, int session_id,
                     Utf8ToStringView(message))) {
     v8::Isolate* isolate = parent_env_->isolate();
 
-#if NODE_USE_V8_PLATFORM
     platform_->CallOnForegroundThread(isolate,
                                       new DispatchOnInspectorBackendTask(this));
-#endif // NODE_USE_V8_PLATFORM
 
     isolate->RequestInterrupt(InterruptCallback, this);
     CHECK_EQ(0, uv_async_send(&main_thread_req_));

@@ -8,15 +8,12 @@
 
 #include "src/inspector/inspected-context.h"
 #include "src/inspector/protocol/Protocol.h"
-#include "src/inspector/remote-object-id.h"
 #include "src/inspector/search-util.h"
 #include "src/inspector/string-util.h"
 #include "src/inspector/v8-console-agent-impl.h"
 #include "src/inspector/v8-debugger-agent-impl.h"
 #include "src/inspector/v8-debugger.h"
-#include "src/inspector/v8-heap-profiler-agent-impl.h"
 #include "src/inspector/v8-inspector-impl.h"
-#include "src/inspector/v8-profiler-agent-impl.h"
 #include "src/inspector/v8-runtime-agent-impl.h"
 #include "src/inspector/v8-schema-agent-impl.h"
 
@@ -28,10 +25,6 @@ bool V8InspectorSession::canDispatchMethod(const StringView& method) {
                               protocol::Runtime::Metainfo::commandPrefix) ||
          stringViewStartsWith(method,
                               protocol::Debugger::Metainfo::commandPrefix) ||
-         stringViewStartsWith(method,
-                              protocol::Profiler::Metainfo::commandPrefix) ||
-         stringViewStartsWith(
-             method, protocol::HeapProfiler::Metainfo::commandPrefix) ||
          stringViewStartsWith(method,
                               protocol::Console::Metainfo::commandPrefix) ||
          stringViewStartsWith(method,
@@ -57,8 +50,6 @@ V8InspectorSessionImpl::V8InspectorSessionImpl(V8InspectorImpl* inspector,
       m_state(nullptr),
       m_runtimeAgent(nullptr),
       m_debuggerAgent(nullptr),
-      m_heapProfilerAgent(nullptr),
-      m_profilerAgent(nullptr),
       m_consoleAgent(nullptr),
       m_schemaAgent(nullptr) {
   if (savedState.length()) {
@@ -78,15 +69,6 @@ V8InspectorSessionImpl::V8InspectorSessionImpl(V8InspectorImpl* inspector,
       this, this, agentState(protocol::Debugger::Metainfo::domainName)));
   protocol::Debugger::Dispatcher::wire(&m_dispatcher, m_debuggerAgent.get());
 
-  m_profilerAgent = wrapUnique(new V8ProfilerAgentImpl(
-      this, this, agentState(protocol::Profiler::Metainfo::domainName)));
-  protocol::Profiler::Dispatcher::wire(&m_dispatcher, m_profilerAgent.get());
-
-  m_heapProfilerAgent = wrapUnique(new V8HeapProfilerAgentImpl(
-      this, this, agentState(protocol::HeapProfiler::Metainfo::domainName)));
-  protocol::HeapProfiler::Dispatcher::wire(&m_dispatcher,
-                                           m_heapProfilerAgent.get());
-
   m_consoleAgent = wrapUnique(new V8ConsoleAgentImpl(
       this, this, agentState(protocol::Console::Metainfo::domainName)));
   protocol::Console::Dispatcher::wire(&m_dispatcher, m_consoleAgent.get());
@@ -98,8 +80,6 @@ V8InspectorSessionImpl::V8InspectorSessionImpl(V8InspectorImpl* inspector,
   if (savedState.length()) {
     m_runtimeAgent->restore();
     m_debuggerAgent->restore();
-    m_heapProfilerAgent->restore();
-    m_profilerAgent->restore();
     m_consoleAgent->restore();
   }
 }
@@ -107,8 +87,6 @@ V8InspectorSessionImpl::V8InspectorSessionImpl(V8InspectorImpl* inspector,
 V8InspectorSessionImpl::~V8InspectorSessionImpl() {
   ErrorString errorString;
   m_consoleAgent->disable(&errorString);
-  m_profilerAgent->disable(&errorString);
-  m_heapProfilerAgent->disable(&errorString);
   m_debuggerAgent->disable(&errorString);
   m_runtimeAgent->disable(&errorString);
 
@@ -190,14 +168,6 @@ V8InspectorSessionImpl::supportedDomainsImpl() {
   result.push_back(protocol::Schema::Domain::create()
                        .setName(protocol::Debugger::Metainfo::domainName)
                        .setVersion(protocol::Debugger::Metainfo::version)
-                       .build());
-  result.push_back(protocol::Schema::Domain::create()
-                       .setName(protocol::Profiler::Metainfo::domainName)
-                       .setVersion(protocol::Profiler::Metainfo::version)
-                       .build());
-  result.push_back(protocol::Schema::Domain::create()
-                       .setName(protocol::HeapProfiler::Metainfo::domainName)
-                       .setVersion(protocol::HeapProfiler::Metainfo::version)
                        .build());
   result.push_back(protocol::Schema::Domain::create()
                        .setName(protocol::Schema::Metainfo::domainName)

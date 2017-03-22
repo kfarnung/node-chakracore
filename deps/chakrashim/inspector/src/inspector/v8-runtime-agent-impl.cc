@@ -30,16 +30,16 @@
 
 #include "src/inspector/v8-runtime-agent-impl.h"
 
+#include <assert.h>
+
 #include "src/inspector/inspected-context.h"
 #include "src/inspector/protocol/Protocol.h"
-#include "src/inspector/remote-object-id.h"
 #include "src/inspector/string-util.h"
 #include "src/inspector/v8-console-message.h"
 #include "src/inspector/v8-debugger-agent-impl.h"
 #include "src/inspector/v8-debugger.h"
 #include "src/inspector/v8-inspector-impl.h"
 #include "src/inspector/v8-inspector-session-impl.h"
-#include "src/inspector/v8-stack-trace-impl.h"
 
 #include "include/v8-inspector.h"
 #include "src/jsrtinspectorhelpers.h"
@@ -58,6 +58,21 @@ static bool hasInternalError(ErrorString* errorString, bool hasError) {
   if (hasError) *errorString = "Internal error";
   return hasError;
 }
+
+namespace {
+
+std::unique_ptr<protocol::DictionaryValue> ParseObjectId(const String16& objectId) {
+  std::unique_ptr<protocol::Value> parsedValue = protocol::parseJSON(objectId);
+  if (!parsedValue || parsedValue->type() != protocol::Value::TypeObject)
+    return nullptr;
+
+  std::unique_ptr<protocol::DictionaryValue> parsedObjectId(
+    protocol::DictionaryValue::cast(parsedValue.release()));
+
+  return parsedObjectId;
+}
+
+}  // namespace
 
 V8RuntimeAgentImpl::V8RuntimeAgentImpl(
     V8InspectorSessionImpl* session, protocol::FrontendChannel* FrontendChannel,
@@ -86,8 +101,10 @@ void V8RuntimeAgentImpl::evaluate(
     return;
   }
 
-  JsValueRef result;
-  if (JsDiagEvaluate(expStr, 0, JsParseScriptAttributeNone, true, &result) != JsNoError) {
+  v8::Local<v8::Value> evalResult =
+      jsrt::InspectorHelpers::EvaluateOnCallFrame(0, expStr, true);
+  
+  if (evalResult.IsEmpty()) {
     errorString = "Failed to evaluate expression";
     callback->sendFailure(errorString);
     return;
@@ -96,8 +113,7 @@ void V8RuntimeAgentImpl::evaluate(
   Maybe<protocol::Runtime::ExceptionDetails> exceptionDetails;
   protocol::ErrorSupport errors;
   std::unique_ptr<protocol::Value> protocolValue =
-      toProtocolValue(&errorString, v8::Context::GetCurrent(),
-                      jsrt::InspectorHelpers::WrapEvaluateObject(result));
+      toProtocolValue(&errorString, v8::Context::GetCurrent(), evalResult);
   if (!protocolValue) {
     callback.get()->sendSuccess(nullptr, exceptionDetails);
     return;
@@ -117,6 +133,8 @@ void V8RuntimeAgentImpl::awaitPromise(
     const String16& promiseObjectId, const Maybe<bool>& returnByValue,
     const Maybe<bool>& generatePreview,
     std::unique_ptr<AwaitPromiseCallback> callback) {
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
 }
 
 void V8RuntimeAgentImpl::callFunctionOn(
@@ -127,17 +145,8 @@ void V8RuntimeAgentImpl::callFunctionOn(
     const Maybe<bool>& generatePreview, const Maybe<bool>& userGesture,
     const Maybe<bool>& awaitPromise,
     std::unique_ptr<CallFunctionOnCallback> callback) {
-}
-
-static std::unique_ptr<protocol::DictionaryValue> ParseObjectId(const String16& objectId) {
-  std::unique_ptr<protocol::Value> parsedValue = protocol::parseJSON(objectId);
-  if (!parsedValue || parsedValue->type() != protocol::Value::TypeObject)
-    return nullptr;
-
-  std::unique_ptr<protocol::DictionaryValue> parsedObjectId(
-    protocol::DictionaryValue::cast(parsedValue.release()));
-
-  return parsedObjectId;
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
 }
 
 void V8RuntimeAgentImpl::getProperties(
@@ -151,10 +160,9 @@ void V8RuntimeAgentImpl::getProperties(
     Maybe<protocol::Runtime::ExceptionDetails>* exceptionDetails) {
   using protocol::Runtime::InternalPropertyDescriptor;
 
-  *errorString = "Failure";
-
   if (!ownProperties.fromMaybe(false) || accessorPropertiesOnly.fromMaybe(false)) {
     // We don't support either of these lookups.
+    *result = protocol::Array<protocol::Runtime::PropertyDescriptor>::create();
     return;
   }
   
@@ -163,44 +171,62 @@ void V8RuntimeAgentImpl::getProperties(
     return;
   }
 
-  protocol::String id;
+  int handle;
   int ordinal;
-  if (parsedId->getString("id", &id)) {
-    bool ok = false;
-    int handle = id.toInteger(&ok);
-    if (!ok) {
-      *errorString = "Invalid object ID";
-    }
+  protocol::String name;
 
-    JsValueRef handleObject;
-    JsDiagGetObjectFromHandle(handle, &handleObject);
+  v8::Local<v8::Value> resultValue;
 
-    JsValueRef propertiesObject;
-    JsDiagGetProperties(handle, 0, 1000, &propertiesObject);
+  if (parsedId->getInteger("handle", &handle)) {
+    resultValue = jsrt::InspectorHelpers::GetWrappedProperties(handle);
   }
-  else if (parsedId->getInteger("ordinal", &ordinal) && parsedId->getString("name", &id)) {
+  else if (parsedId->getInteger("ordinal", &ordinal) && parsedId->getString("name", &name)) {
     JsValueRef stackProperties;
-    JsDiagGetStackProperties(ordinal, &stackProperties);
-
-    if (id == "locals") {
-      JsValueRef locals;
-      jsrt::InspectorHelpers::GetProperty(stackProperties, "locals", &locals);
+    if (JsDiagGetStackProperties(ordinal, &stackProperties) != JsNoError) {
+      *errorString = "Invalid ordinal value";
+      return;
     }
-    else if (id == "globals") {
+
+    if (name == "locals") {
+      resultValue = jsrt::InspectorHelpers::GetWrappedStackLocals(stackProperties);
+    }
+    else if (name == "globals") {
       JsValueRef globals;
-      jsrt::InspectorHelpers::GetProperty(stackProperties, "globals", &globals);
+      if (jsrt::InspectorHelpers::GetProperty(stackProperties, "globals", &globals) != JsNoError) {
+        *errorString = "Invalid stack property name";
+        return;
+      }
+
+      int handle;
+      if (jsrt::InspectorHelpers::GetIntProperty(globals, "handle", &handle) != JsNoError) {
+        *errorString = "Unable to find object";
+        return;
+      }
+
+      resultValue = jsrt::InspectorHelpers::GetWrappedProperties(handle);
     }
     else {
-      *errorString = "Invalid object ID";
+      *errorString = "Invalid stack property name";
+      return;
     }
   }
   else {
-    *errorString = "Invalid object ID";
+    *errorString = "Unable to parse object ID";
+    return;
   }
 
+  if (hasInternalError(errorString, resultValue.IsEmpty())) return;
+  std::unique_ptr<protocol::Value> protocolValue =
+      toProtocolValue(errorString, v8::Context::GetCurrent(), resultValue);
+  if (!protocolValue) return;
+  
+  protocol::ErrorSupport errors(errorString);
+  std::unique_ptr<protocol::Array<protocol::Runtime::PropertyDescriptor>> parsedResult =
+      protocol::Array<protocol::Runtime::PropertyDescriptor>::parse(protocolValue.get(), &errors);
+  if (!hasInternalError(errorString, errors.hasErrors()))
+    *result = std::move(parsedResult);
+  
   v8::Local<v8::Array> propertiesArray;
-
-  *result = protocol::Array<protocol::Runtime::PropertyDescriptor>::create();
 
   std::unique_ptr<protocol::Array<InternalPropertyDescriptor>>
       propertiesProtocolArray =
@@ -233,20 +259,31 @@ void V8RuntimeAgentImpl::getProperties(
 
 void V8RuntimeAgentImpl::releaseObject(ErrorString* errorString,
                                        const String16& objectId) {
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
 }
 
 void V8RuntimeAgentImpl::releaseObjectGroup(ErrorString*,
                                             const String16& objectGroup) {
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
 }
 
 void V8RuntimeAgentImpl::runIfWaitingForDebugger(ErrorString* errorString) {
+  m_inspector->client()->runIfWaitingForDebugger(m_session->contextGroupId());
 }
 
 void V8RuntimeAgentImpl::setCustomObjectFormatterEnabled(ErrorString*,
                                                          bool enabled) {
+  m_state->setBoolean(V8RuntimeAgentImplState::customObjectFormatterEnabled,
+                      enabled);
+  m_session->setCustomObjectFormatterEnabled(enabled);
 }
 
 void V8RuntimeAgentImpl::discardConsoleEntries(ErrorString*) {
+  V8ConsoleMessageStorage* storage =
+      m_inspector->ensureConsoleMessageStorage(m_session->contextGroupId());
+  storage->clear();
 }
 
 void V8RuntimeAgentImpl::compileScript(
@@ -254,6 +291,8 @@ void V8RuntimeAgentImpl::compileScript(
     const String16& sourceURL, bool persistScript,
     const Maybe<int>& executionContextId, Maybe<String16>* scriptId,
     Maybe<protocol::Runtime::ExceptionDetails>* exceptionDetails) {
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
 }
 
 void V8RuntimeAgentImpl::runScript(
@@ -262,9 +301,19 @@ void V8RuntimeAgentImpl::runScript(
     const Maybe<bool>& includeCommandLineAPI, const Maybe<bool>& returnByValue,
     const Maybe<bool>& generatePreview, const Maybe<bool>& awaitPromise,
     std::unique_ptr<RunScriptCallback> callback) {
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
 }
 
 void V8RuntimeAgentImpl::restore() {
+  if (!m_state->booleanProperty(V8RuntimeAgentImplState::runtimeEnabled, false))
+    return;
+  m_frontend.executionContextsCleared();
+  ErrorString error;
+  enable(&error);
+  if (m_state->booleanProperty(
+          V8RuntimeAgentImplState::customObjectFormatterEnabled, false))
+    m_session->setCustomObjectFormatterEnabled(true);
 }
 
 void V8RuntimeAgentImpl::enable(ErrorString* errorString) {
@@ -284,11 +333,22 @@ void V8RuntimeAgentImpl::enable(ErrorString* errorString) {
 
 void V8RuntimeAgentImpl::disable(ErrorString* errorString) {
   if (!m_enabled) return;
-
   m_enabled = false;
+  m_state->setBoolean(V8RuntimeAgentImplState::runtimeEnabled, false);
+  m_inspector->disableStackCapturingIfNeeded();
+  reset();
+  m_inspector->client()->endEnsureAllContextsInGroup(
+      m_session->contextGroupId());
 }
 
 void V8RuntimeAgentImpl::reset() {
+  if (m_enabled) {
+    if (const V8InspectorImpl::ContextByIdMap* contexts =
+            m_inspector->contextGroup(m_session->contextGroupId())) {
+      for (auto& idContext : *contexts) idContext.second->setReported(false);
+    }
+    m_frontend.executionContextsCleared();
+  }
 }
 
 void V8RuntimeAgentImpl::reportExecutionContextCreated(
@@ -309,11 +369,17 @@ void V8RuntimeAgentImpl::reportExecutionContextCreated(
 
 void V8RuntimeAgentImpl::reportExecutionContextDestroyed(
     InspectedContext* context) {
+  if (m_enabled && context->isReported()) {
+    context->setReported(false);
+    m_frontend.executionContextDestroyed(context->contextId());
+  }
 }
 
 void V8RuntimeAgentImpl::inspect(
     std::unique_ptr<protocol::Runtime::RemoteObject> objectToInspect,
     std::unique_ptr<protocol::DictionaryValue> hints) {
+  if (m_enabled)
+    m_frontend.inspectRequested(std::move(objectToInspect), std::move(hints));
 }
 
 void V8RuntimeAgentImpl::messageAdded(V8ConsoleMessage* message) {

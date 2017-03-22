@@ -67,22 +67,6 @@ static String16 calculateHash(const String16& str) {
   return hash.toString();
 }
 
-static v8::Local<v8::Value> GetChecked(v8::Local<v8::Context> context,
-                                       v8::Local<v8::Object> object,
-                                       const char* name) {
-  return object
-      ->Get(context, toV8StringInternalized(context->GetIsolate(), name))
-      .ToLocalChecked();
-}
-
-static int GetCheckedInt(v8::Local<v8::Context> context,
-                         v8::Local<v8::Object> object, const char* name) {
-  return static_cast<int>(GetChecked(context, object, name)
-                              ->ToInteger(context)
-                              .ToLocalChecked()
-                              ->Value());
-}
-
 static JsErrorCode GetNamedIntValue(JsValueRef object, const char *propName, int *value) {
   JsErrorCode err = JsNoError;
 

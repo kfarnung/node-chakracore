@@ -128,10 +128,9 @@ v8::Local<v8::Object> JavaScriptCallFrame::details() const {
 }
 
 v8::MaybeLocal<v8::Value> JavaScriptCallFrame::evaluate(
-    v8::Local<v8::Value> expression) {
-  // CHAKRA-TODO - Figure out what to do here.
-  assert(false);
-  return v8::MaybeLocal<v8::Value>();
+    v8::Local<v8::Value> expression, bool* isError) {
+  return jsrt::InspectorHelpers::EvaluateOnCallFrame(
+      m_callFrame, reinterpret_cast<JsValueRef>(*expression), false, isError);
 }
 
 v8::MaybeLocal<v8::Value> JavaScriptCallFrame::restart() {

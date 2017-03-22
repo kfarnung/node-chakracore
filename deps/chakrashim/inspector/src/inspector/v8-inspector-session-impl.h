@@ -20,8 +20,6 @@ class RemoteObjectIdBase;
 class V8ConsoleAgentImpl;
 class V8DebuggerAgentImpl;
 class V8InspectorImpl;
-class V8HeapProfilerAgentImpl;
-class V8ProfilerAgentImpl;
 class V8RuntimeAgentImpl;
 class V8SchemaAgentImpl;
 
@@ -39,7 +37,6 @@ class V8InspectorSessionImpl : public V8InspectorSession,
   V8ConsoleAgentImpl* consoleAgent() { return m_consoleAgent.get(); }
   V8DebuggerAgentImpl* debuggerAgent() { return m_debuggerAgent.get(); }
   V8SchemaAgentImpl* schemaAgent() { return m_schemaAgent.get(); }
-  V8ProfilerAgentImpl* profilerAgent() { return m_profilerAgent.get(); }
   V8RuntimeAgentImpl* runtimeAgent() { return m_runtimeAgent.get(); }
   int contextGroupId() const { return m_contextGroupId; }
 
@@ -86,8 +83,6 @@ class V8InspectorSessionImpl : public V8InspectorSession,
 
   std::unique_ptr<V8RuntimeAgentImpl> m_runtimeAgent;
   std::unique_ptr<V8DebuggerAgentImpl> m_debuggerAgent;
-  std::unique_ptr<V8HeapProfilerAgentImpl> m_heapProfilerAgent;
-  std::unique_ptr<V8ProfilerAgentImpl> m_profilerAgent;
   std::unique_ptr<V8ConsoleAgentImpl> m_consoleAgent;
   std::unique_ptr<V8SchemaAgentImpl> m_schemaAgent;
 

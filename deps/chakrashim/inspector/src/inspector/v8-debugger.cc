@@ -291,6 +291,9 @@ bool V8Debugger::setScriptSource(
     ErrorString* error,
     Maybe<protocol::Runtime::ExceptionDetails>* exceptionDetails,
     JavaScriptCallFrames* newCallFrames, Maybe<bool>* stackChanged) {
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
+
   return false;
 }
 
@@ -317,20 +320,19 @@ JavaScriptCallFrames V8Debugger::currentCallFrames(int limit) {
     assert(false);
     return JavaScriptCallFrames();
   }
+
+  if (limit > 0 && limit < length) {
+    length = limit;
+  }
   
   JavaScriptCallFrames callFrames;
   for (int i = 0; i < length; ++i) {
-    JsValueRef index;
-    if (JsIntToNumber(i, &index) != JsNoError) {
+    JsValueRef callFrameValue;
+    if (jsrt::InspectorHelpers::GetIndexedProperty(stackTrace, i, &callFrameValue) != JsNoError) {
       assert(false);
       return JavaScriptCallFrames();
     }
 
-    JsValueRef callFrameValue;
-    if (JsGetIndexedProperty(stackTrace, index, &callFrameValue) != JsNoError) {
-      assert(false);
-      return JavaScriptCallFrames();
-    }
     callFrames.push_back(JavaScriptCallFrame::create(
         debuggerContext(), callFrameValue));
   }
@@ -343,13 +345,21 @@ V8StackTraceImpl* V8Debugger::currentAsyncCallChain() {
 
 v8::MaybeLocal<v8::Array> V8Debugger::internalProperties(
     v8::Local<v8::Context> context, v8::Local<v8::Value> value) {
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
+
   return v8::MaybeLocal<v8::Array>();
 }
 
-bool V8Debugger::isPaused() { return !m_pausedContext.IsEmpty(); }
+bool V8Debugger::isPaused() {
+  return !m_pausedContext.IsEmpty();
+}
 
 std::unique_ptr<V8StackTraceImpl> V8Debugger::createStackTrace(
     v8::Local<v8::StackTrace> stackTrace) {
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
+
   return std::unique_ptr<V8StackTraceImpl>(nullptr);
 }
 
@@ -366,36 +376,69 @@ int V8Debugger::markContext(const V8ContextInfo& info) {
 }
 
 void V8Debugger::setAsyncCallStackDepth(V8DebuggerAgentImpl* agent, int depth) {
+  if (depth <= 0)
+    m_maxAsyncCallStackDepthMap.erase(agent);
+  else
+    m_maxAsyncCallStackDepthMap[agent] = depth;
+
+  int maxAsyncCallStackDepth = 0;
+  for (const auto& pair : m_maxAsyncCallStackDepthMap) {
+    if (pair.second > maxAsyncCallStackDepth)
+      maxAsyncCallStackDepth = pair.second;
+  }
+
+  if (m_maxAsyncCallStackDepth == maxAsyncCallStackDepth) return;
+  m_maxAsyncCallStackDepth = maxAsyncCallStackDepth;
+  if (!maxAsyncCallStackDepth) allAsyncTasksCanceled();
 }
 
 void V8Debugger::asyncTaskScheduled(const StringView& taskName, void* task,
                                     bool recurring) {
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
 }
 
 void V8Debugger::asyncTaskScheduled(const String16& taskName, void* task,
                                     bool recurring) {
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
 }
 
 void V8Debugger::asyncTaskCanceled(void* task) {
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
 }
 
 void V8Debugger::asyncTaskStarted(void* task) {
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
 }
 
 void V8Debugger::asyncTaskFinished(void* task) {
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
 }
 
 void V8Debugger::allAsyncTasksCanceled() {
+  // CHAKRA-TODO - Figure out what to do here
+  ////assert(false);
 }
 
 void V8Debugger::muteScriptParsedEvents() {
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
 }
 
 void V8Debugger::unmuteScriptParsedEvents() {
+  // CHAKRA-TODO - Figure out what to do here
+  assert(false);
 }
 
 std::unique_ptr<V8StackTraceImpl> V8Debugger::captureStackTrace(
     bool fullStack) {
+  // CHAKRA-TODO - Figure out what to do here
+  ////assert(false);
+
   return std::unique_ptr<V8StackTraceImpl>(nullptr);
 }
 

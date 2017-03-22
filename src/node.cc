@@ -275,12 +275,11 @@ static struct {
   void PumpMessageLoop(Isolate* isolate) {}
   void Dispose() {}
 
-#if HAVE_INSPECTOR
   bool StartInspector(Environment *env, const char* script_path,
                       const node::DebugOptions& options) {
-    return env->inspector_agent()->Start(nullptr, script_path, options);
+    env->ThrowError("Node compiled with NODE_USE_V8_PLATFORM=0");
+    return false;  // make compiler happy
   }
-#endif
 
   void StartTracingAgent() {
     fprintf(stderr, "Node compiled with NODE_USE_V8_PLATFORM=0, "

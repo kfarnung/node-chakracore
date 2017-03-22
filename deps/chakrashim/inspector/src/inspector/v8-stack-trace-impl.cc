@@ -7,7 +7,6 @@
 #include "src/inspector/string-util.h"
 #include "src/inspector/v8-debugger.h"
 #include "src/inspector/v8-inspector-impl.h"
-#include "src/inspector/v8-profiler-agent-impl.h"
 
 #include "include/v8-debug.h"
 #include "include/v8-profiler.h"
@@ -161,12 +160,6 @@ std::unique_ptr<V8StackTraceImpl> V8StackTraceImpl::capture(
   v8::HandleScope handleScope(isolate);
   v8::Local<v8::StackTrace> stackTrace;
   if (isolate->InContext()) {
-    if (debugger) {
-      V8InspectorImpl* inspector = debugger->inspector();
-      V8ProfilerAgentImpl* profilerAgent =
-          inspector->enabledProfilerAgentForGroup(contextGroupId);
-      if (profilerAgent) profilerAgent->collectSample();
-    }
     stackTrace = v8::StackTrace::CurrentStackTrace(
         isolate, static_cast<int>(maxStackSize), stackTraceOptions);
   }

@@ -26,36 +26,59 @@ namespace jsrt {
 
 class InspectorHelpers {
 public:
-  static JsErrorCode HasProperty(JsValueRef obj, const char *name,
-                                 bool *hasProperty);
-  static JsErrorCode GetProperty(JsValueRef obj, const char *name,
-                                 JsValueRef *value);
-  static JsErrorCode GetBoolProperty(JsValueRef obj, const char *name,
-                                     bool *value);
-  static JsErrorCode GetIntProperty(JsValueRef obj, const char *name,
-                                    int *value);
-  static JsErrorCode SetProperty(JsValueRef obj, const char *name,
+  static JsErrorCode HasProperty(JsValueRef obj, const char* name,
+                                 bool* hasProperty);
+  static JsErrorCode GetProperty(JsValueRef obj, const char* name,
+                                 JsValueRef* value);
+  static JsErrorCode GetBoolProperty(JsValueRef obj, const char* name,
+                                     bool* value);
+  static JsErrorCode GetIntProperty(JsValueRef obj, const char* name,
+                                    int* value);
+  static JsErrorCode GetIndexedProperty(JsValueRef obj, int index,
+                                        JsValueRef* value);
+  static JsErrorCode SetProperty(JsValueRef obj, const char* name,
                                  JsValueRef value);
-  static JsErrorCode SetPropertyString(JsValueRef obj, const char *name,
-                                       const char *value);
+  static JsErrorCode SetBoolProperty(JsValueRef obj, const char* name,
+                                     bool value);
+  static JsErrorCode SetStringProperty(JsValueRef obj, const char* name,
+                                       const char* value);
   static JsErrorCode SetIndexedProperty(JsValueRef obj, int index,
                                         JsValueRef value);
   static JsErrorCode TryCopyProperty(JsValueRef sourceObj, 
-                                           const char *sourceName,
+                                     const char* sourceName,
+                                     JsValueRef destObj,
+                                     const char* destName = nullptr,
+                                     bool* wasCopied = nullptr);
+  static JsErrorCode TryCopyPropertyString(JsValueRef sourceObj,
+                                           const char* sourceName,
                                            JsValueRef destObj,
-                                           const char *destName = nullptr,
-                                           bool *wasCopied = nullptr);
-  static JsErrorCode TryCopyPropertyString(
-      JsValueRef sourceObj,
-      const char *sourceName,
-      JsValueRef destObj,
-      const char *destName = nullptr,
-      bool *wasCopied = nullptr);
+                                           const char* destName = nullptr,
+                                           bool* wasCopied = nullptr);
+
+  static JsErrorCode ArrayConcat(JsValueRef array, JsValueRef value);
 
   static v8::Local<v8::Value> WrapEvaluateObject(JsValueRef sourceObject);
   static v8::Local<v8::Object> WrapCallFrameDetails(JsValueRef callFrame);
   static v8::Local<v8::Value> WrapRuntimeException(JsValueRef eventData);
-  static JsRuntimeHandle GetRuntimeFromIsolate(v8::Isolate *isolate);
+  static v8::Local<v8::Value> WrapPropertiesArray(JsValueRef properties);
+  static v8::Local<v8::Value> GetWrappedProperties(int handle);
+  static v8::Local<v8::Value> GetWrappedStackLocals(JsValueRef stackProperties);
+
+  static v8::Local<v8::Value> EvaluateOnCallFrame(int ordinal,
+                                                  JsValueRef expression,
+                                                  bool returnByValue,
+                                                  bool* isError = nullptr);
+  static v8::Local<v8::Value> EvaluateOnCallFrame(JsValueRef callFrame,
+                                                  JsValueRef expression,
+                                                  bool returnByValue,
+                                                  bool* isError = nullptr);
+
+  static JsRuntimeHandle GetRuntimeFromIsolate(v8::Isolate* isolate);
+
+ private:
+  static void WrapObject(JsValueRef obj, JsValueRef* wrappedObj);
+  static void WrapProperty(JsValueRef property, JsValueRef* wrappedProperty);
+  static v8::Local<v8::Value> WrapException(JsValueRef exception);
 };
 
 }  // namespace jsrt
