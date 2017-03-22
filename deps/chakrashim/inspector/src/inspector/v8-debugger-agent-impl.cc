@@ -7,8 +7,6 @@
 #include <algorithm>
 #include <assert.h>
 
-#include "src/inspector/injected-script.h"
-#include "src/inspector/inspected-context.h"
 #include "src/inspector/java-script-call-frame.h"
 #include "src/inspector/protocol/Protocol.h"
 #include "src/inspector/remote-object-id.h"
@@ -54,7 +52,6 @@ static const char skipAllPauses[] = "skipAllPauses";
 }  // namespace DebuggerAgentState
 
 static const int maxSkipStepFrameCount = 128;
-static const char backtraceObjectGroup[] = "backtrace";
 
 static String16 breakpointIdSuffix(
     V8DebuggerAgentImpl::BreakpointSource source) {
@@ -555,7 +552,6 @@ void V8DebuggerAgentImpl::resume(ErrorString* errorString) {
   if (!assertPaused(errorString)) return;
   m_scheduledDebuggerStep = NoStep;
   m_steppingFromFramework = false;
-  m_session->releaseObjectGroup(backtraceObjectGroup);
   m_debugger->continueProgram();
 }
 
@@ -570,7 +566,6 @@ void V8DebuggerAgentImpl::stepOver(ErrorString* errorString) {
   }
   m_scheduledDebuggerStep = StepOver;
   m_steppingFromFramework = isTopPausedCallFrameBlackboxed();
-  m_session->releaseObjectGroup(backtraceObjectGroup);
   m_debugger->stepOverStatement();
 }
 
@@ -578,7 +573,6 @@ void V8DebuggerAgentImpl::stepInto(ErrorString* errorString) {
   if (!assertPaused(errorString)) return;
   m_scheduledDebuggerStep = StepInto;
   m_steppingFromFramework = isTopPausedCallFrameBlackboxed();
-  m_session->releaseObjectGroup(backtraceObjectGroup);
   m_debugger->stepIntoStatement();
 }
 
@@ -588,7 +582,6 @@ void V8DebuggerAgentImpl::stepOut(ErrorString* errorString) {
   m_skipNextDebuggerStepOut = false;
   m_recursionLevelForStepOut = 1;
   m_steppingFromFramework = isTopPausedCallFrameBlackboxed();
-  m_session->releaseObjectGroup(backtraceObjectGroup);
   m_debugger->stepOutOfFunction();
 }
 
@@ -739,9 +732,6 @@ std::unique_ptr<Array<CallFrame>> V8DebuggerAgentImpl::currentCallFrames(
       return Array<CallFrame>::create();
 
     int contextId = currentCallFrame->contextId();
-    InjectedScript* injectedScript =
-        contextId ? m_session->findInjectedScript(&ignored, contextId)
-                  : nullptr;
 
     String16 callFrameId =
         RemoteCallFrameId::serialize(contextId, static_cast<int>(frameOrdinal));

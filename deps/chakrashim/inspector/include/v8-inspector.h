@@ -117,14 +117,6 @@ class V8_EXPORT V8InspectorSession {
  public:
   virtual ~V8InspectorSession() {}
 
-  // Cross-context inspectable values (DOM nodes in different worlds, etc.).
-  class V8_EXPORT Inspectable {
-   public:
-    virtual v8::Local<v8::Value> get(v8::Local<v8::Context>) = 0;
-    virtual ~Inspectable() {}
-  };
-  virtual void addInspectedObject(std::unique_ptr<Inspectable>) = 0;
-
   // Dispatching protocol messages.
   static bool canDispatchMethod(const StringView& method);
   virtual void dispatchProtocolMessage(const StringView& message) = 0;
@@ -144,16 +136,6 @@ class V8_EXPORT V8InspectorSession {
   virtual std::vector<std::unique_ptr<protocol::Debugger::API::SearchMatch>>
   searchInTextByLines(const StringView& text, const StringView& query,
                       bool caseSensitive, bool isRegex) = 0;
-
-  // Remote objects.
-  virtual std::unique_ptr<protocol::Runtime::API::RemoteObject> wrapObject(
-      v8::Local<v8::Context>, v8::Local<v8::Value>,
-      const StringView& groupName) = 0;
-  virtual bool unwrapObject(std::unique_ptr<StringBuffer>* error,
-                            const StringView& objectId, v8::Local<v8::Value>*,
-                            v8::Local<v8::Context>*,
-                            std::unique_ptr<StringBuffer>* objectGroup) = 0;
-  virtual void releaseObjectGroup(const StringView&) = 0;
 };
 
 enum class V8ConsoleAPIType { kClear, kDebug, kLog, kInfo, kWarning, kError };

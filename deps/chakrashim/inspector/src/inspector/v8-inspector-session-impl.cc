@@ -4,7 +4,8 @@
 
 #include "src/inspector/v8-inspector-session-impl.h"
 
-#include "src/inspector/injected-script.h"
+#include <assert.h>
+
 #include "src/inspector/inspected-context.h"
 #include "src/inspector/protocol/Protocol.h"
 #include "src/inspector/remote-object-id.h"
@@ -111,7 +112,6 @@ V8InspectorSessionImpl::~V8InspectorSessionImpl() {
   m_debuggerAgent->disable(&errorString);
   m_runtimeAgent->disable(&errorString);
 
-  discardInjectedScripts();
   m_inspector->disconnect(this);
 }
 
@@ -143,162 +143,13 @@ void V8InspectorSessionImpl::flushProtocolNotifications() {
 void V8InspectorSessionImpl::reset() {
   m_debuggerAgent->reset();
   m_runtimeAgent->reset();
-  discardInjectedScripts();
-}
-
-void V8InspectorSessionImpl::discardInjectedScripts() {
-  m_inspectedObjects.clear();
-  const V8InspectorImpl::ContextByIdMap* contexts =
-      m_inspector->contextGroup(m_contextGroupId);
-  if (!contexts) return;
-
-  std::vector<int> keys;
-  keys.reserve(contexts->size());
-  for (auto& idContext : *contexts) keys.push_back(idContext.first);
-  for (auto& key : keys) {
-    contexts = m_inspector->contextGroup(m_contextGroupId);
-    if (!contexts) continue;
-    auto contextIt = contexts->find(key);
-    if (contextIt != contexts->end())
-      contextIt->second
-          ->discardInjectedScript();  // This may destroy some contexts.
-  }
-}
-
-InjectedScript* V8InspectorSessionImpl::findInjectedScript(
-    ErrorString* errorString, int contextId) {
-  if (!contextId) {
-    *errorString = "Cannot find context with specified id";
-    return nullptr;
-  }
-
-  const V8InspectorImpl::ContextByIdMap* contexts =
-      m_inspector->contextGroup(m_contextGroupId);
-  if (!contexts) {
-    *errorString = "Cannot find context with specified id";
-    return nullptr;
-  }
-
-  auto contextsIt = contexts->find(contextId);
-  if (contextsIt == contexts->end()) {
-    *errorString = "Cannot find context with specified id";
-    return nullptr;
-  }
-
-  const std::unique_ptr<InspectedContext>& context = contextsIt->second;
-  if (!context->getInjectedScript()) {
-    context->createInjectedScript();
-    if (!context->getInjectedScript()) {
-      *errorString = "Cannot access specified execution context";
-      return nullptr;
-    }
-    if (m_customObjectFormatterEnabled)
-      context->getInjectedScript()->setCustomObjectFormatterEnabled(true);
-  }
-  return context->getInjectedScript();
-}
-
-InjectedScript* V8InspectorSessionImpl::findInjectedScript(
-    ErrorString* errorString, RemoteObjectIdBase* objectId) {
-  return objectId ? findInjectedScript(errorString, objectId->contextId())
-                  : nullptr;
-}
-
-void V8InspectorSessionImpl::releaseObjectGroup(const StringView& objectGroup) {
-  releaseObjectGroup(toString16(objectGroup));
-}
-
-void V8InspectorSessionImpl::releaseObjectGroup(const String16& objectGroup) {
-  const V8InspectorImpl::ContextByIdMap* contexts =
-      m_inspector->contextGroup(m_contextGroupId);
-  if (!contexts) return;
-
-  std::vector<int> keys;
-  for (auto& idContext : *contexts) keys.push_back(idContext.first);
-  for (auto& key : keys) {
-    contexts = m_inspector->contextGroup(m_contextGroupId);
-    if (!contexts) continue;
-    auto contextsIt = contexts->find(key);
-    if (contextsIt == contexts->end()) continue;
-    InjectedScript* injectedScript = contextsIt->second->getInjectedScript();
-    if (injectedScript)
-      injectedScript->releaseObjectGroup(
-          objectGroup);  // This may destroy some contexts.
-  }
-}
-
-bool V8InspectorSessionImpl::unwrapObject(
-    std::unique_ptr<StringBuffer>* error, const StringView& objectId,
-    v8::Local<v8::Value>* object, v8::Local<v8::Context>* context,
-    std::unique_ptr<StringBuffer>* objectGroup) {
-  ErrorString errorString;
-  String16 objectGroupString;
-  bool result =
-      unwrapObject(&errorString, toString16(objectId), object, context,
-                   objectGroup ? &objectGroupString : nullptr);
-  if (error) *error = StringBufferImpl::adopt(errorString);
-  if (objectGroup) *objectGroup = StringBufferImpl::adopt(objectGroupString);
-  return result;
-}
-
-bool V8InspectorSessionImpl::unwrapObject(ErrorString* errorString,
-                                          const String16& objectId,
-                                          v8::Local<v8::Value>* object,
-                                          v8::Local<v8::Context>* context,
-                                          String16* objectGroup) {
-  std::unique_ptr<RemoteObjectId> remoteId =
-      RemoteObjectId::parse(errorString, objectId);
-  if (!remoteId) return false;
-  InjectedScript* injectedScript =
-      findInjectedScript(errorString, remoteId.get());
-  if (!injectedScript) return false;
-  if (!injectedScript->findObject(errorString, *remoteId, object)) return false;
-  *context = injectedScript->context()->context();
-  if (objectGroup) *objectGroup = injectedScript->objectGroupName(*remoteId);
-  return true;
-}
-
-std::unique_ptr<protocol::Runtime::API::RemoteObject>
-V8InspectorSessionImpl::wrapObject(v8::Local<v8::Context> context,
-                                   v8::Local<v8::Value> value,
-                                   const StringView& groupName) {
-  return wrapObject(context, value, toString16(groupName), false);
-}
-
-std::unique_ptr<protocol::Runtime::RemoteObject>
-V8InspectorSessionImpl::wrapObject(v8::Local<v8::Context> context,
-                                   v8::Local<v8::Value> value,
-                                   const String16& groupName,
-                                   bool generatePreview) {
-  ErrorString errorString;
-  InjectedScript* injectedScript =
-      findInjectedScript(&errorString, V8Debugger::contextId(context));
-  if (!injectedScript) return nullptr;
-  return injectedScript->wrapObject(&errorString, value, groupName, false,
-                                    generatePreview);
-}
-
-std::unique_ptr<protocol::Runtime::RemoteObject>
-V8InspectorSessionImpl::wrapTable(v8::Local<v8::Context> context,
-                                  v8::Local<v8::Value> table,
-                                  v8::Local<v8::Value> columns) {
-  ErrorString errorString;
-  InjectedScript* injectedScript =
-      findInjectedScript(&errorString, V8Debugger::contextId(context));
-  if (!injectedScript) return nullptr;
-  return injectedScript->wrapTable(table, columns);
 }
 
 void V8InspectorSessionImpl::setCustomObjectFormatterEnabled(bool enabled) {
   m_customObjectFormatterEnabled = enabled;
-  const V8InspectorImpl::ContextByIdMap* contexts =
-      m_inspector->contextGroup(m_contextGroupId);
-  if (!contexts) return;
-  for (auto& idContext : *contexts) {
-    InjectedScript* injectedScript = idContext.second->getInjectedScript();
-    if (injectedScript)
-      injectedScript->setCustomObjectFormatterEnabled(enabled);
-  }
+  
+  // CHAKRA-TODO - Figure out what to do here.
+  assert(false);
 }
 
 void V8InspectorSessionImpl::reportAllContexts(V8RuntimeAgentImpl* agent) {
@@ -353,19 +204,6 @@ V8InspectorSessionImpl::supportedDomainsImpl() {
                        .setVersion(protocol::Schema::Metainfo::version)
                        .build());
   return result;
-}
-
-void V8InspectorSessionImpl::addInspectedObject(
-    std::unique_ptr<V8InspectorSession::Inspectable> inspectable) {
-  m_inspectedObjects.insert(m_inspectedObjects.begin(), std::move(inspectable));
-  if (m_inspectedObjects.size() > kInspectedObjectBufferSize)
-    m_inspectedObjects.resize(kInspectedObjectBufferSize);
-}
-
-V8InspectorSession::Inspectable* V8InspectorSessionImpl::inspectedObject(
-    unsigned num) {
-  if (num >= m_inspectedObjects.size()) return nullptr;
-  return m_inspectedObjects[num].get();
 }
 
 void V8InspectorSessionImpl::schedulePauseOnNextStatement(

@@ -4,7 +4,6 @@
 
 #include "src/inspector/inspected-context.h"
 
-#include "src/inspector/injected-script.h"
 #include "src/inspector/string-util.h"
 #include "src/inspector/v8-console.h"
 #include "src/inspector/v8-inspector-impl.h"
@@ -73,12 +72,5 @@ v8::Local<v8::Context> InspectedContext::context() const {
 v8::Isolate* InspectedContext::isolate() const {
   return m_inspector->isolate();
 }
-
-void InspectedContext::createInjectedScript() {
-  DCHECK(!m_injectedScript);
-  m_injectedScript = InjectedScript::create(this);
-}
-
-void InspectedContext::discardInjectedScript() { m_injectedScript.reset(); }
 
 }  // namespace v8_inspector

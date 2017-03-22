@@ -4,7 +4,6 @@
 
 #include "src/inspector/v8-heap-profiler-agent-impl.h"
 
-#include "src/inspector/injected-script.h"
 #include "src/inspector/protocol/Protocol.h"
 #include "src/inspector/string-util.h"
 #include "src/inspector/v8-debugger.h"

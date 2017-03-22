@@ -11,54 +11,6 @@
     '../../third_party/WebKit/Source/platform/inspector_protocol/inspector_protocol.gypi',
   ],
   'targets': [
-    { 'target_name': 'inspector_injected_script',
-      'type': 'none',
-      'actions': [
-        {
-          'action_name': 'convert_js_to_cpp_char_array',
-          'inputs': [
-            'build/xxd.py',
-            '<(inspector_injected_script_source)',
-          ],
-          'outputs': [
-            '<(inspector_generated_injected_script)',
-          ],
-          'action': [
-            'python',
-            'build/xxd.py',
-            'InjectedScriptSource_js',
-            'injected-script-source.js',
-            '<@(_outputs)'
-          ],
-        },
-      ],
-      # Since this target generates header files, it needs to be a hard dependency.
-      'hard_dependency': 1,
-    },
-    { 'target_name': 'inspector_debugger_script',
-      'type': 'none',
-      'actions': [
-        {
-          'action_name': 'convert_js_to_cpp_char_array',
-          'inputs': [
-            'build/xxd.py',
-            '<(inspector_debugger_script_source)',
-          ],
-          'outputs': [
-            '<(inspector_generated_debugger_script)',
-          ],
-          'action': [
-            'python',
-            'build/xxd.py',
-            'DebuggerScript_js',
-            'debugger-script.js',
-            '<@(_outputs)'
-          ],
-        },
-      ],
-      # Since this target generates header files, it needs to be a hard dependency.
-      'hard_dependency': 1,
-    },
     { 'target_name': 'protocol_compatibility',
       'type': 'none',
       'actions': [
@@ -120,8 +72,6 @@
       ],
       'dependencies': [
         'protocol_generated_sources',
-        'inspector_injected_script',
-        'inspector_debugger_script',
         '../../../chakrashim.gyp:chakrashim',
       ],
     },

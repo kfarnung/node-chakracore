@@ -40,12 +40,12 @@ public:
                                        const char *value);
   static JsErrorCode SetIndexedProperty(JsValueRef obj, int index,
                                         JsValueRef value);
-  static JsErrorCode CopyPropertyIfPresent(JsValueRef sourceObj, 
+  static JsErrorCode TryCopyProperty(JsValueRef sourceObj, 
                                            const char *sourceName,
                                            JsValueRef destObj,
                                            const char *destName = nullptr,
                                            bool *wasCopied = nullptr);
-  static JsErrorCode CopyPropertyStringIfPresent(
+  static JsErrorCode TryCopyPropertyString(
       JsValueRef sourceObj,
       const char *sourceName,
       JsValueRef destObj,

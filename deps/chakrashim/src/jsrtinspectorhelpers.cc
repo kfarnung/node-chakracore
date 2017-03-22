@@ -98,7 +98,7 @@ namespace jsrt {
                                     const char *sourceName,JsValueRef destObj,
                                     const char *destName = nullptr) {
     bool wasCopied;
-    CHAKRA_VERIFY_NOERROR(InspectorHelpers::CopyPropertyIfPresent(
+    CHAKRA_VERIFY_NOERROR(InspectorHelpers::TryCopyProperty(
         sourceObj, sourceName, destObj, destName, &wasCopied));
 
     return wasCopied;
@@ -109,7 +109,7 @@ namespace jsrt {
                                           JsValueRef destObj,
                                           const char *destName = nullptr) {
     bool wasCopied;
-    CHAKRA_VERIFY_NOERROR(InspectorHelpers::CopyPropertyStringIfPresent(
+    CHAKRA_VERIFY_NOERROR(InspectorHelpers::TryCopyPropertyString(
         sourceObj, sourceName, destObj, destName, &wasCopied));
 
     return wasCopied;
@@ -270,7 +270,7 @@ namespace jsrt {
     return err;
   }
 
-  JsErrorCode InspectorHelpers::CopyPropertyIfPresent(
+  JsErrorCode InspectorHelpers::TryCopyProperty(
       JsValueRef sourceObj,
       const char *sourceName,
       JsValueRef destObj,
@@ -280,7 +280,7 @@ namespace jsrt {
                             static_cast<ConvertFunc>(nullptr), wasCopied);
   }
 
-  JsErrorCode InspectorHelpers::CopyPropertyStringIfPresent(
+  JsErrorCode InspectorHelpers::TryCopyPropertyString(
       JsValueRef sourceObj,
       const char *sourceName,
       JsValueRef destObj,
