@@ -759,6 +759,16 @@ namespace jsrt {
     return EvaluateOnCallFrame(ordinal, expression, returnByValue, isError);
   }
 
+  v8::Local<v8::Value> InspectorHelpers::GetScriptSource(unsigned int scriptId) {
+    JsValueRef scriptSource;
+    CHAKRA_VERIFY_NOERROR(JsDiagGetSource(scriptId, &scriptSource));
+
+    JsValueRef sourceStr;
+    CHAKRA_VERIFY_NOERROR(InspectorHelpers::GetProperty(scriptSource, "source", &sourceStr));
+
+    return v8::Utils::ToLocal(static_cast<v8::Value*>(sourceStr));
+  }
+
   JsRuntimeHandle InspectorHelpers::GetRuntimeFromIsolate(
       v8::Isolate *isolate) {
     return IsolateShim::FromIsolate(isolate)->GetRuntimeHandle();

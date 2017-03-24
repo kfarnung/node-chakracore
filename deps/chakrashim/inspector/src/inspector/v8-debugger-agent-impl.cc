@@ -904,10 +904,6 @@ std::unique_ptr<StackTrace> V8DebuggerAgentImpl::currentAsyncStackTrace() {
 void V8DebuggerAgentImpl::didParseSource(
     std::unique_ptr<V8DebuggerScript> script, bool success) {
   v8::HandleScope handles(m_isolate);
-  String16 scriptSource = toProtocolString(script->source(m_isolate));
-  if (!success) script->setSourceURL(findSourceURL(scriptSource, false));
-  if (!success)
-    script->setSourceMappingURL(findSourceMapURL(scriptSource, false));
 
   std::unique_ptr<protocol::DictionaryValue> executionContextAuxData;
   if (!script->executionContextAuxData().isEmpty())

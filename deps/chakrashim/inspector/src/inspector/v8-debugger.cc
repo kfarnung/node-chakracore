@@ -98,7 +98,7 @@ void V8Debugger::getCompiledScripts(
       return;
     }
 
-    result.push_back(wrapUnique(new V8DebuggerScript(script, false)));
+    result.push_back(wrapUnique(new V8DebuggerScript(m_isolate, script, false)));
   }
 }
 
@@ -488,7 +488,7 @@ void V8Debugger::HandleSourceEvents(JsValueRef eventData, bool success) {
 
   if (agent != nullptr)
   {
-    agent->didParseSource(wrapUnique(new V8DebuggerScript(eventData, false)),
+    agent->didParseSource(wrapUnique(new V8DebuggerScript(m_isolate, eventData, false)),
                           success);
   }
 }

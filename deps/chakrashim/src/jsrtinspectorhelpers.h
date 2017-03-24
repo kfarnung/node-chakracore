@@ -73,6 +73,8 @@ public:
                                                   bool returnByValue,
                                                   bool* isError = nullptr);
 
+  static v8::Local<v8::Value> GetScriptSource(unsigned int scriptId);
+
   static JsRuntimeHandle GetRuntimeFromIsolate(v8::Isolate* isolate);
 
  private:
