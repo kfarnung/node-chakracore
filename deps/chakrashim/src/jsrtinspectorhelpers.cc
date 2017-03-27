@@ -671,13 +671,30 @@ namespace jsrt {
   }
 
   v8::Local<v8::Value> InspectorHelpers::GetWrappedProperties(int handle) {
-    JsValueRef diagProperties;
-    CHAKRA_VERIFY_NOERROR(JsDiagGetProperties(handle, 0, 1000, &diagProperties));
+    JsValueRef diagProperties = nullptr;
+    JsErrorCode err = JsDiagGetProperties(handle, 0, 5000, &diagProperties);
+    if (err == JsErrorDiagInvalidHandle) {
+      // The handle is no longer valid, this is likely due to a pending
+      // request that wasn't serviced before the last continuation.
+      return v8::Local<v8::Value>();
+    }
+    CHAKRA_VERIFY_NOERROR(err);
+
+    JsValueRef allPropsArray;
+    JsCreateArray(0, &allPropsArray);
 
     JsValueRef propertiesArray;
-    CHAKRA_VERIFY_NOERROR(jsrt::InspectorHelpers::GetProperty(diagProperties, "properties", &propertiesArray));
+    CHAKRA_VERIFY_NOERROR(jsrt::InspectorHelpers::GetProperty(
+        diagProperties, "properties", &propertiesArray));
+    ArrayConcat(allPropsArray, propertiesArray);
 
-    return jsrt::InspectorHelpers::WrapPropertiesArray(propertiesArray);
+    JsValueRef debuggerOnlyPropertiesArray;
+    CHAKRA_VERIFY_NOERROR(jsrt::InspectorHelpers::GetProperty(
+        diagProperties, "debuggerOnlyProperties",
+        &debuggerOnlyPropertiesArray));
+    ArrayConcat(allPropsArray, debuggerOnlyPropertiesArray);
+
+    return jsrt::InspectorHelpers::WrapPropertiesArray(allPropsArray);
   }
 
   v8::Local<v8::Value> InspectorHelpers::GetWrappedStackLocals(JsValueRef stackProperties) {

@@ -160,8 +160,8 @@ void V8RuntimeAgentImpl::getProperties(
     Maybe<protocol::Runtime::ExceptionDetails>* exceptionDetails) {
   using protocol::Runtime::InternalPropertyDescriptor;
 
-  if (!ownProperties.fromMaybe(false) || accessorPropertiesOnly.fromMaybe(false)) {
-    // We don't support either of these lookups.
+  if (accessorPropertiesOnly.fromMaybe(false)) {
+    // We don't support accessorPropertiesOnly lookups.
     *result = protocol::Array<protocol::Runtime::PropertyDescriptor>::create();
     return;
   }
