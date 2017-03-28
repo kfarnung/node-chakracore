@@ -4441,8 +4441,7 @@ void Init(int* argc,
 #ifdef NODE_ENGINE_CHAKRACORE
   if (debug_options.inspector_enabled()) {
     v8::Debug::EnableInspector();
-  }
-  else if (debug_options.debugger_enabled()) {
+  } else if (debug_options.debugger_enabled()) {
     v8::Debug::EnableDebug();
   }
 #endif

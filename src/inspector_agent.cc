@@ -71,12 +71,12 @@ std::string StringViewToUtf8(const StringView& view) {
                        view.length());
   }
 
-  // CHAKRA-TODO: Figure out what to do here
   const uint16_t* source = view.characters16();
   const size_t length = view.length();
   std::string result;
 
-  // CHAKRA-TODO: HACK, assume characters are ASCII and assert when they are not.
+  // CHAKRA-TODO: HACK, assume characters are ASCII and assert when they are
+  // not.
   for (size_t i = 0; i < length; i++) {
     uint16_t wCh = source[i];
     assert((wCh & 0xFF80) == 0);
@@ -84,34 +84,12 @@ std::string StringViewToUtf8(const StringView& view) {
     result.append(1, static_cast<char>(wCh));
   }
 
-  ////const UChar* unicodeSource = reinterpret_cast<const UChar*>(source);
-  ////static_assert(sizeof(*source) == sizeof(*unicodeSource),
-  ////              "sizeof(*source) == sizeof(*unicodeSource)");
-
-  ////size_t result_length = view.length() * sizeof(*source);
-  ////std::string result(result_length, '\0');
-  ////UnicodeString utf16(unicodeSource, view.length());
-  // ICU components for std::string compatibility are not enabled in build...
-  /*bool done = false;
-  while (!done) {
-    CheckedArrayByteSink sink(&result[0], result_length);
-    utf16.toUTF8(sink);
-    result_length = sink.NumberOfBytesAppended();
-    result.resize(result_length);
-    done = !sink.Overflowed();
-  }*/
   return result;
 }
 
 std::unique_ptr<StringBuffer> Utf8ToStringView(const std::string& message) {
-  // CHAKRA-TODO: Figure out what to do here
-
-  ////UnicodeString utf16 =
-  ////    UnicodeString::fromUTF8(StringPiece(message.data(), message.length()));
-  ////StringView view(reinterpret_cast<const uint16_t*>(utf16.getBuffer()),
-  ////                utf16.length());
-
-  // CHAKRA-TODO: HACK, assume characters are ASCII and assert when they are not.
+  // CHAKRA-TODO: HACK, assume characters are ASCII and assert when they are
+  // not.
   std::vector<uint16_t> wChars;
   for (const char &ch : message) {
     assert((ch & 0x80) == 0);
