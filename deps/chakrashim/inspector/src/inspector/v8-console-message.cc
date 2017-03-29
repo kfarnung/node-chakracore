@@ -318,8 +318,6 @@ std::unique_ptr<protocol::Runtime::RemoteObject>
 V8ConsoleMessage::wrapException(V8InspectorSessionImpl* session,
                                 bool generatePreview) const {
   // CHAKRA-TODO - Figure out what to do here.
-  assert(false);
-
   return std::unique_ptr<protocol::Runtime::RemoteObject>();
 }
 

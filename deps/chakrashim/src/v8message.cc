@@ -24,7 +24,6 @@ namespace v8 {
 
 Local<String> Message::Get() const {
   // CHAKRA-TODO: Figure out what to do here
-  CHAKRA_ASSERT(false);
   return Local<String>();
 }
 
@@ -39,7 +38,6 @@ Local<String> Message::GetSourceLine() const {
 
 ScriptOrigin Message::GetScriptOrigin() const {
   // CHAKRA-TODO: Figure out what to do here
-  CHAKRA_ASSERT(false);
   return ScriptOrigin(Local<String>());
 }
 
@@ -50,7 +48,6 @@ Handle<Value> Message::GetScriptResourceName() const {
 
 Local<StackTrace> Message::GetStackTrace() const {
   // CHAKRA-TODO: Figure out what to do here
-  CHAKRA_ASSERT(false);
   return Local<StackTrace>();
 }
 

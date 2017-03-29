@@ -145,8 +145,10 @@ void V8RuntimeAgentImpl::callFunctionOn(
     const Maybe<bool>& generatePreview, const Maybe<bool>& userGesture,
     const Maybe<bool>& awaitPromise,
     std::unique_ptr<CallFunctionOnCallback> callback) {
-  // CHAKRA-TODO - Figure out what to do here
-  assert(false);
+  // CHAKRA-TODO - This is used to execute an arbitrary JS function against a
+  // given object. We don't have a good way to handle this right now in
+  // ChakraCore.
+  callback->sendFailure("Unsupported operation");
 }
 
 void V8RuntimeAgentImpl::getProperties(
@@ -266,7 +268,6 @@ void V8RuntimeAgentImpl::releaseObject(ErrorString* errorString,
 void V8RuntimeAgentImpl::releaseObjectGroup(ErrorString*,
                                             const String16& objectGroup) {
   // CHAKRA-TODO - Figure out what to do here
-  assert(false);
 }
 
 void V8RuntimeAgentImpl::runIfWaitingForDebugger(ErrorString* errorString) {

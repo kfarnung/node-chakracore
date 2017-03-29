@@ -358,8 +358,6 @@ bool V8Debugger::isPaused() {
 std::unique_ptr<V8StackTraceImpl> V8Debugger::createStackTrace(
     v8::Local<v8::StackTrace> stackTrace) {
   // CHAKRA-TODO - Figure out what to do here
-  assert(false);
-
   return std::unique_ptr<V8StackTraceImpl>(nullptr);
 }
 
