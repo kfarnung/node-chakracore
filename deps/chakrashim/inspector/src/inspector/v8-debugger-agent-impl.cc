@@ -468,12 +468,21 @@ V8DebuggerAgentImpl::SkipPauseRequest V8DebuggerAgentImpl::shouldSkipStepPause(
     if (m_scheduledDebuggerStep == StepOut) return RequestStepOut;
   }
 
-  if (!isCallFrameWithUnknownScriptOrBlackboxed(topCallFrame))
+  if (!isCallFrameWithUnknownScriptOrBlackboxed(topCallFrame)) {
     return RequestNoSkip;
+  }
 
-  if (m_skippedStepFrameCount >= maxSkipStepFrameCount) return RequestStepOut;
+  // Treat step out as a special case. If the user was most recently
+  // attempting to step out, then we will continue to step out until a known
+  // script is encountered.
+  if (m_scheduledDebuggerStep == StepOut ||
+      m_skippedStepFrameCount >= maxSkipStepFrameCount) {
+    return RequestStepOut;
+  }
 
-  if (!m_skippedStepFrameCount) m_recursionLevelForStepFrame = 1;
+  if (!m_skippedStepFrameCount) {
+    m_recursionLevelForStepFrame = 1;
+  }
 
   ++m_skippedStepFrameCount;
   return RequestStepFrame;

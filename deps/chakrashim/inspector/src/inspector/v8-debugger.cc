@@ -567,10 +567,8 @@ void V8Debugger::HandleBreak(JsValueRef eventData) {
   }
   m_pausedContext.Clear();
 
-  if (result == V8DebuggerAgentImpl::RequestStepFrame) {
-    // CHAKRA-TODO - Figure out what to do here.
-    assert(false);
-  } else if (result == V8DebuggerAgentImpl::RequestStepInto) {
+  if (result == V8DebuggerAgentImpl::RequestStepFrame ||
+      result == V8DebuggerAgentImpl::RequestStepInto) {
     JsDiagSetStepType(JsDiagStepTypeStepIn);
   } else if (result == V8DebuggerAgentImpl::RequestStepOut) {
     JsDiagSetStepType(JsDiagStepTypeStepOut);
