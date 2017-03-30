@@ -129,11 +129,11 @@ protocol::DictionaryValue* V8InspectorSessionImpl::agentState(
 
 void V8InspectorSessionImpl::sendProtocolResponse(int callId,
                                                   const String16& message) {
-  m_channel->sendProtocolResponse(callId, toStringView(message));
+  m_channel->sendResponse(callId, toStringBuffer(message));
 }
 
 void V8InspectorSessionImpl::sendProtocolNotification(const String16& message) {
-  m_channel->sendProtocolNotification(toStringView(message));
+  m_channel->sendNotification(toStringBuffer(message));
 }
 
 void V8InspectorSessionImpl::flushProtocolNotifications() {
