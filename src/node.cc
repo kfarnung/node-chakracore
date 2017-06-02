@@ -4122,6 +4122,15 @@ static void StartInspector(Environment* env, const char* path,
 }
 
 
+static bool IsInspectorConnected(Environment* env) {
+#if HAVE_INSPECTOR
+  return env->inspector_agent()->IsConnected();
+#else
+  return false;
+#endif
+}
+
+
 #ifdef __POSIX__
 void RegisterSignalHandler(int signal,
                            void (*handler)(int signal),
@@ -4835,7 +4844,7 @@ inline int Start_TTDReplay(Isolate* isolate, void* isolate_context,
         &nextEventTime);
 
     // don't continue replay actions if we are not in debug mode
-    continueReplayActions &= s_doTTDebug;
+    continueReplayActions &= s_doTTDebug && IsInspectorConnected(&env);
   }
 
   JsTTDStop();
