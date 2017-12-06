@@ -630,6 +630,17 @@ namespace jsrt {
     return EvaluateOnCallFrame(ordinal, expression, returnByValue, isError);
   }
 
+  v8::Local<v8::Value> InspectorHelpers::EvaluateOnGlobalCallFrame(
+      JsValueRef expression, bool returnByValue, bool* isError) {
+    JsValueRef stackTrace = JS_INVALID_REFERENCE;
+    CHAKRA_VERIFY_NOERROR(JsDiagGetStackTrace(&stackTrace));
+
+    unsigned int length = 0;
+    CHAKRA_VERIFY_NOERROR(jsrt::GetArrayLength(stackTrace, &length));
+
+    return EvaluateOnCallFrame(length - 1, expression, returnByValue, isError);
+  }
+
   v8::Local<v8::Value> InspectorHelpers::GetScriptSource(
       unsigned int scriptId) {
     JsValueRef scriptSource = JS_INVALID_REFERENCE;
