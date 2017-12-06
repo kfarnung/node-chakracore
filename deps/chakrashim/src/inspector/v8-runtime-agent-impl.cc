@@ -99,9 +99,10 @@ void V8RuntimeAgentImpl::evaluate(
     return;
   }
 
+  bool isError = false;
   v8::Local<v8::Value> evalResult =
       jsrt::InspectorHelpers::EvaluateOnCallFrame(
-          /* ordinal */ 0, expStr, returnByValue.fromMaybe(false));
+          /* ordinal */ 0, expStr, returnByValue.fromMaybe(false), &isError);
 
   if (evalResult.IsEmpty()) {
     errorString = "Failed to evaluate expression";
@@ -114,7 +115,7 @@ void V8RuntimeAgentImpl::evaluate(
   std::unique_ptr<protocol::Value> protocolValue =
       toProtocolValue(&errorString, v8::Context::GetCurrent(), evalResult);
   if (!protocolValue) {
-    callback->sendSuccess(nullptr, exceptionDetails);
+    callback->sendFailure(errorString);
     return;
   }
   std::unique_ptr<protocol::Runtime::RemoteObject> remoteObject =
@@ -123,6 +124,29 @@ void V8RuntimeAgentImpl::evaluate(
     errorString = errors.errors();
     callback->sendFailure(errorString);
     return;
+  }
+
+  if (isError) {
+    protocol::ErrorSupport errors;
+    std::unique_ptr<protocol::Runtime::RemoteObject> exceptionObject =
+        protocol::Runtime::RemoteObject::parse(protocolValue.get(), &errors);
+    if (!exceptionObject) {
+      errorString = errors.errors();
+      callback->sendFailure(errorString);
+      return;
+    }
+
+    std::unique_ptr<protocol::Runtime::ExceptionDetails> exDetails =
+        protocol::Runtime::ExceptionDetails::create()
+          .setExceptionId(m_session->inspector()->nextExceptionId())
+          .setText(exceptionObject->getDescription("Uncaught"))
+          .setLineNumber(0)
+          .setColumnNumber(0)
+          .build();
+
+    exDetails->setException(std::move(exceptionObject));
+
+    exceptionDetails = std::move(exDetails);
   }
 
   callback->sendSuccess(std::move(remoteObject), exceptionDetails);
