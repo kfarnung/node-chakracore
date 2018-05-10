@@ -235,6 +235,9 @@ class FunctionTemplateData : public TemplateData {
       FunctionCallbackData* callbackData =
         new FunctionCallbackData(callback, data, signature, instanceTemplate);
 
+      IsolateShim* iso = IsolateShim::GetCurrent();
+      ContextShim* contextShim = ContextShim::GetCurrent();
+
       JsValueRef funcCallbackObjectRef;
       JsErrorCode error = JsCreateExternalObject(
         callbackData,
@@ -261,7 +264,6 @@ class FunctionTemplateData : public TemplateData {
       if (!removePrototype) {
         Local<Object> prototype;
         {
-          IsolateShim* iso = IsolateShim::GetCurrent();
           prototype = !prototypeTemplate.IsEmpty() ?
             prototypeTemplate->NewInstance() : Object::New();
 
@@ -313,6 +315,15 @@ class FunctionTemplateData : public TemplateData {
 
       if (CopyPropertiesTo(function) != JsNoError) {
         return nullptr;
+      }
+
+      if (removePrototype) {
+        if (JsSetProperty(function,
+                          iso->GetCachedPropertyIdRef(
+                              jsrt::CachedPropertyIdRef::prototype),
+                          contextShim->GetUndefined(), false) != JsNoError) {
+          return nullptr;
+        }
       }
 
       this->functionInstance = function;
